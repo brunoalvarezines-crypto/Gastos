@@ -2302,6 +2302,29 @@
   secretState = loadSecretState() || seedSecretState();
   if(!secretState.items) secretState.items = [];
 
+  /* --- Restauración única de las operaciones del usuario ---
+     Se ejecuta una sola vez por dispositivo. Repone las transacciones
+     reales y las marca como recientes para que se suban a la nube. */
+  (function restoreSecretV1(){
+    try{
+      if(localStorage.getItem("restore-secret-v1") === "done") return;
+      secretState = { items: [
+        { id:"r1", title:"Asics grises",        comprado:{fecha:"25-03-26", precio:7},  subido:{fecha:"03-04-26", precio:70},    vendido:{fecha:"", precio:70} },
+        { id:"r2", title:"Air max 95 x Corteiz", comprado:{fecha:"11-04-26", precio:35}, subido:{fecha:"20-04-26", precio:79},    vendido:{fecha:"21-04-26", precio:79} },
+        { id:"r3", title:"Asics rosas",          comprado:{fecha:"19-04-26", precio:30}, subido:{fecha:"01-05-26", precio:75},    vendido:{fecha:"03-05-26", precio:75} },
+        { id:"r4", title:"Nike supreme",         comprado:{fecha:"19-04-26", precio:40}, subido:{fecha:"02-05-26", precio:85},    vendido:{fecha:"13-07-26", precio:85} },
+        { id:"r5", title:"Asics rosas 2",        comprado:{fecha:"08-06-26", precio:37}, subido:{fecha:"10-07-26", precio:89.99}, vendido:{fecha:"12-07-26", precio:85} },
+        { id:"r6", title:"Pantalon Corteiz",     comprado:{fecha:"08-06-26", precio:26}, subido:{fecha:"09-07-26", precio:55},    vendido:{fecha:"", precio:""} },
+        { id:"r7", title:"Camiseta España",      comprado:{fecha:"08-06-26", precio:11}, subido:{fecha:"", precio:""},            vendido:{fecha:"", precio:""} },
+        { id:"r8", title:"Camiseta brasil",      comprado:{fecha:"08-06-26", precio:11}, subido:{fecha:"", precio:""},            vendido:{fecha:"", precio:""} }
+      ] };
+      var ts = Date.now();
+      localStorage.setItem(SECRET_STORAGE_KEY, JSON.stringify(secretState));
+      localStorage.setItem(SECRET_STORAGE_KEY + "__ts", String(ts));
+      localStorage.setItem("restore-secret-v1", "done");
+    }catch(e){}
+  })();
+
   function saveSecret(){
     var ts = Date.now();
     try{
