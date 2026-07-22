@@ -232,10 +232,40 @@
     color:var(--text);
     cursor:text;
     border-bottom:1px dashed transparent;
+    user-select:none;
+    -webkit-user-select:none;
+    -webkit-touch-callout:none;
+    touch-action:manipulation;
   }
   .figure.estimated .value:hover{
     border-bottom:1px dashed var(--text-faint);
   }
+  .apply-all-menu{
+    position:fixed;
+    background:#fff;
+    border:1px solid var(--border);
+    border-radius:12px;
+    box-shadow:0 10px 28px rgba(20,24,31,0.16);
+    padding:6px;
+    z-index:2000;
+    min-width:210px;
+  }
+  .apply-all-item{
+    display:block;
+    width:100%;
+    text-align:left;
+    background:none;
+    border:none;
+    font:inherit;
+    font-size:13.5px;
+    font-weight:500;
+    color:var(--text);
+    padding:10px 12px;
+    border-radius:8px;
+    cursor:pointer;
+    white-space:nowrap;
+  }
+  .apply-all-item:hover{background:var(--accent-soft);color:var(--accent);}
   .figure.spent{text-align:right;}
   .figure.spent .value.good{color:var(--status-blue);}
   .figure.spent .value.bad{color:var(--status-red);}
@@ -1833,13 +1863,78 @@
     return wrap;
   }
 
+  function closeApplyAllMenu(){
+    var m = document.getElementById("applyAllMenu");
+    if(m) m.remove();
+    document.removeEventListener("click", onApplyAllDocClick, false);
+    window.removeEventListener("scroll", closeApplyAllMenu, true);
+    window.removeEventListener("resize", closeApplyAllMenu);
+  }
+  function onApplyAllDocClick(e){
+    var m = document.getElementById("applyAllMenu");
+    if(m && !m.contains(e.target)) closeApplyAllMenu();
+  }
+  function showApplyAllMenu(anchor, year, md){
+    closeApplyAllMenu();
+    var menu = el("div","apply-all-menu");
+    menu.id = "applyAllMenu";
+    var btn = el("button","apply-all-item",{text:"Aplicar a todos los meses"});
+    btn.type = "button";
+    btn.addEventListener("click", function(ev){
+      ev.stopPropagation();
+      var val = md.estimated || 0;
+      for(var mo=0; mo<12; mo++){
+        getMonthData(year, mo).estimated = val;
+      }
+      save();
+      closeApplyAllMenu();
+      renderSelectedMonth();
+    });
+    menu.appendChild(btn);
+    document.body.appendChild(menu);
+    var r = anchor.getBoundingClientRect();
+    var mw = menu.offsetWidth || 210;
+    var left = Math.max(8, Math.min(r.left, window.innerWidth - mw - 8));
+    var top = r.bottom + 6;
+    if(top + menu.offsetHeight > window.innerHeight - 8){
+      top = Math.max(8, r.top - menu.offsetHeight - 6);
+    }
+    menu.style.left = left + "px";
+    menu.style.top = top + "px";
+    setTimeout(function(){
+      document.addEventListener("click", onApplyAllDocClick, false);
+      window.addEventListener("scroll", closeApplyAllMenu, true);
+      window.addEventListener("resize", closeApplyAllMenu);
+    }, 0);
+  }
+
   function buildEstimatedFigure(year, month, md){
     var figure = el("div","figure estimated");
     var label = el("div","label",{text:"Gastos estimados"});
     var value = el("div","value",{text: fmt.format(md.estimated||0)});
-    value.title = "Editar presupuesto estimado";
+    value.title = "Editar presupuesto estimado (mantén pulsado para más opciones)";
+
+    // Mantener pulsado -> menú "Aplicar a todos los meses"
+    var lpTimer = null, lpFired = false, sx = 0, sy = 0;
+    function clearLp(){ if(lpTimer){ clearTimeout(lpTimer); lpTimer = null; } }
+    value.addEventListener("pointerdown", function(ev){
+      lpFired = false; sx = ev.clientX; sy = ev.clientY;
+      clearLp();
+      lpTimer = setTimeout(function(){
+        lpFired = true;
+        if(navigator.vibrate){ try{ navigator.vibrate(15); }catch(e){} }
+        showApplyAllMenu(value, year, md);
+      }, 480);
+    });
+    value.addEventListener("pointermove", function(ev){
+      if(lpTimer && (Math.abs(ev.clientX - sx) > 10 || Math.abs(ev.clientY - sy) > 10)) clearLp();
+    });
+    value.addEventListener("pointerup", clearLp);
+    value.addEventListener("pointercancel", clearLp);
+
     value.addEventListener("click", function(ev){
       ev.stopPropagation();
+      if(lpFired){ lpFired = false; return; } // fue mantener pulsado, no editar
       var input = el("input");
       input.type = "number";
       input.min = "0";
