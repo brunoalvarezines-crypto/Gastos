@@ -65,7 +65,49 @@
     align-items:center;
     justify-content:space-between;
     margin-bottom:22px;
+    position:relative;
   }
+  /* Puntito de estado de sincronización, centrado arriba */
+  .sync-dot{
+    position:absolute;
+    left:50%;
+    top:50%;
+    transform:translate(-50%,-50%);
+    display:flex;
+    align-items:center;
+    pointer-events:none;
+  }
+  .sync-dot[hidden]{display:none;}
+  .sync-dot-text{display:none;}
+  .sync-dot .dot{
+    width:11px;height:11px;border-radius:50%;
+    background:#c2c8d2;
+    transition:background .25s ease;
+  }
+  .sync-dot.off .dot{background:#c2c8d2;}      /* gris: sin conexión / local */
+  .sync-dot.syncing .dot{background:#2f6df6; animation:cloudpulse 1s ease-in-out infinite;} /* azul: sincronizando */
+  .sync-dot.ok .dot{background:#2ea86a;}       /* verde: sincronizado */
+  /* Calculadora flotante abajo a la derecha */
+  .calc-fab{
+    position:fixed;
+    right:18px;
+    bottom:18px;
+    z-index:900;
+    width:56px;height:56px;
+    border-radius:50%;
+    background:var(--accent);
+    color:#fff;
+    border:none;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    box-shadow:0 6px 18px rgba(47,93,251,0.40), 0 2px 6px rgba(20,24,31,0.18);
+    transition:background .15s, transform .12s;
+  }
+  .calc-fab:active{transform:scale(0.94);}
+  .calc-fab.active{background:#1e50e0;}
+  .calc-fab svg{stroke:#fff;}
   header.topbar h1{
     font-size:22px;
     font-weight:800;
@@ -1217,11 +1259,10 @@
 <div class="app">
   <header class="topbar">
     <h1>Gastos</h1>
+    <span class="sync-dot off" id="cloudPill" hidden title="Estado de sincronización">
+      <span class="dot"></span><span id="cloudPillText" class="sync-dot-text">Local</span>
+    </span>
     <div class="topbar-right">
-      <span class="cloud-pill off" id="cloudPill" hidden><span class="dot"></span><span id="cloudPillText">Local</span></span>
-      <button id="calcToggle" class="icon-btn" aria-label="Abrir calculadora" type="button">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><rect x="4" y="2.5" width="16" height="19" rx="2.5" stroke="currentColor" stroke-width="1.8"/><rect x="7" y="5.5" width="10" height="4" rx="1" stroke="currentColor" stroke-width="1.8"/><circle cx="7.8" cy="13.5" r="1.15" fill="currentColor"/><circle cx="12" cy="13.5" r="1.15" fill="currentColor"/><circle cx="16.2" cy="13.5" r="1.15" fill="currentColor"/><circle cx="7.8" cy="17.3" r="1.15" fill="currentColor"/><circle cx="12" cy="17.3" r="1.15" fill="currentColor"/><circle cx="16.2" cy="17.3" r="1.15" fill="currentColor"/></svg>
-      </button>
       <div class="month-year-select">
         <button id="monthSelectBtn" class="my-select" type="button">
           <span id="monthSelectLabel">—</span>
@@ -1241,6 +1282,10 @@
     <button class="reset-link" id="resetBtn">Borrar todos los datos</button>
   </footer>
 </div>
+
+<button id="calcToggle" class="calc-fab" aria-label="Abrir calculadora" type="button">
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><rect x="4" y="2.5" width="16" height="19" rx="2.5" stroke="currentColor" stroke-width="1.8"/><rect x="7" y="5.5" width="10" height="4" rx="1" stroke="currentColor" stroke-width="1.8"/><circle cx="7.8" cy="13.5" r="1.15" fill="currentColor"/><circle cx="12" cy="13.5" r="1.15" fill="currentColor"/><circle cx="16.2" cy="13.5" r="1.15" fill="currentColor"/><circle cx="7.8" cy="17.3" r="1.15" fill="currentColor"/><circle cx="12" cy="17.3" r="1.15" fill="currentColor"/><circle cx="16.2" cy="17.3" r="1.15" fill="currentColor"/></svg>
+</button>
 
 <div class="cloud-login" id="cloudLogin" hidden>
   <div class="cloud-login-card">
@@ -3002,7 +3047,9 @@
       right = Math.max(margin, Math.min(right, window.innerWidth - panelWidth - margin));
       panel.style.right = right + "px";
       panel.style.left = "auto";
-      panel.style.top = (rect.bottom + 8) + "px";
+      // El botón está abajo: la calculadora se abre hacia arriba
+      panel.style.top = "auto";
+      panel.style.bottom = (window.innerHeight - rect.top + 10) + "px";
     }
 
     function closePanel(){
