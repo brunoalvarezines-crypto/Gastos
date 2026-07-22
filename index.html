@@ -1252,6 +1252,35 @@
   .cloud-pill.off .dot{ background:#c2c8d2; }
   @keyframes cloudpulse{ 0%,100%{opacity:1;} 50%{opacity:.35;} }
   .cloud-pill[hidden]{display:none;}
+  /* Etiqueta de categoría clicable en cada gasto */
+  .cat-row .cat-tag:hover{ background:var(--accent-soft); color:var(--accent); }
+  /* Modal centrado para nueva categoría */
+  .mini-modal{
+    position:fixed; inset:0; z-index:3000;
+    background:rgba(18,22,30,0.45);
+    -webkit-backdrop-filter:blur(4px); backdrop-filter:blur(4px);
+    display:flex; align-items:center; justify-content:center; padding:22px;
+  }
+  .mini-modal-card{
+    width:100%; max-width:320px; background:var(--card);
+    border-radius:16px; padding:20px;
+    box-shadow:0 18px 50px rgba(0,0,0,0.28);
+    font-family:'Inter',system-ui,sans-serif;
+  }
+  .mini-modal-title{ font-size:16px; font-weight:700; margin:0 0 14px; color:var(--text); }
+  .mini-modal-input{
+    width:100%; box-sizing:border-box; padding:11px 12px;
+    border:1.6px solid var(--border); border-radius:10px;
+    font-size:16px; font-family:inherit; color:var(--text); background:#fff; outline:none;
+  }
+  .mini-modal-input:focus{ border-color:var(--accent); }
+  .mini-modal-actions{ display:flex; gap:10px; margin-top:16px; justify-content:flex-end; }
+  .mini-modal-btn{
+    padding:10px 16px; border-radius:10px; border:none;
+    font:inherit; font-weight:600; font-size:14px; cursor:pointer;
+  }
+  .mini-modal-btn.ghost{ background:var(--accent-soft); color:var(--text); }
+  .mini-modal-btn.primary{ background:var(--accent); color:#fff; }
 </style>
 </head>
 <body>
@@ -1259,9 +1288,6 @@
 <div class="app">
   <header class="topbar">
     <h1>Gastos</h1>
-    <span class="sync-dot off" id="cloudPill" hidden title="Estado de sincronización">
-      <span class="dot"></span><span id="cloudPillText" class="sync-dot-text">Local</span>
-    </span>
     <div class="topbar-right">
       <div class="month-year-select">
         <button id="monthSelectBtn" class="my-select" type="button">
@@ -1350,7 +1376,7 @@
   var CLOUD = { enabled:false, db:null, auth:null, user:null, ready:false, pushTimers:{}, applying:false, unsub:{} };
 
   var MONTH_NAMES = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
-  var DEFAULT_CATEGORIES = ["Vivienda","Alimentación","Transporte","Ocio","Salud","Compras","Suscripciones","Ahorro","Otros"];
+  var DEFAULT_CATEGORIES = ["Compras","Suscripciones","Transporte"];
   var STORAGE_KEY = "gastos-app-v1";
 
   var todayReal = new Date();
@@ -1425,6 +1451,28 @@
     state = seedState();
   }
   normalizeState();
+
+  /* --- Migración única: dejar las categorías en las 3 deseadas y
+     reconvertir los gastos ya importados (categorías de ING) a ellas. --- */
+  (function catsResetV1(){
+    try{
+      if(localStorage.getItem("cats-reset-v1") === "done") return;
+      state.customCategories = [];
+      state.hiddenDefaults = [];
+      Object.keys(state.data || {}).forEach(function(y){
+        Object.keys(state.data[y] || {}).forEach(function(m){
+          var md = state.data[y][m];
+          (md.categories || []).forEach(function(g){
+            if(DEFAULT_CATEGORIES.indexOf(g.cat) === -1){
+              g.cat = mapCategoriaRaw(g.cat, g.desc);
+            }
+          });
+        });
+      });
+      localStorage.setItem("cats-reset-v1", "done");
+      save();
+    }catch(e){}
+  })();
 
   function getCategories(){
     var list = DEFAULT_CATEGORIES.filter(function(c){
@@ -1597,9 +1645,135 @@
     });
   });
 
+  function addCustomCategory(v){
+    v = (v || "").trim();
+    if(!v) return;
+    if(getCategories().indexOf(v) === -1){
+      state.customCategories.push(v);
+      save();
+    }
+  }
+
+  // Modal centrado para escribir el nombre de una nueva categoría
+  // (centrado para que el teclado del móvil no lo tape ni lo cierre).
+  function promptNewCategory(cb){
+    var overlay = el("div","mini-modal");
+    var card = el("div","mini-modal-card");
+    var title = el("div","mini-modal-title",{text:"Nueva categoría"});
+    var input = el("input","mini-modal-input");
+    input.type = "text";
+    input.placeholder = "Nombre de la categoría";
+    input.setAttribute("autocapitalize","sentences");
+    input.setAttribute("autocomplete","off");
+    var actions = el("div","mini-modal-actions");
+    var cancel = el("button","mini-modal-btn ghost",{type:"button", text:"Cancelar"});
+    var ok = el("button","mini-modal-btn primary",{type:"button", text:"Guardar"});
+    actions.appendChild(cancel);
+    actions.appendChild(ok);
+    card.appendChild(title);
+    card.appendChild(input);
+    card.appendChild(actions);
+    overlay.appendChild(card);
+    document.body.appendChild(overlay);
+    function close(){ overlay.remove(); }
+    function submit(){
+      var v = input.value.trim();
+      close();
+      if(v) cb(v);
+    }
+    card.addEventListener("click", function(e){ e.stopPropagation(); });
+    overlay.addEventListener("click", function(){ close(); });
+    cancel.addEventListener("click", function(e){ e.stopPropagation(); close(); });
+    ok.addEventListener("click", function(e){ e.stopPropagation(); submit(); });
+    input.addEventListener("keydown", function(e){
+      if(e.key === "Enter"){ e.preventDefault(); submit(); }
+      if(e.key === "Escape"){ close(); }
+    });
+    setTimeout(function(){ input.focus(); }, 60);
+  }
+
+  // Menú flotante de categorías anclado a un elemento (para cambiar la
+  // categoría de un gasto ya existente tocando su etiqueta).
+  function closeFloatingCatMenu(){
+    var m = document.getElementById("floatingCatMenu");
+    if(m) m.remove();
+    document.removeEventListener("click", floatingCatOutside, true);
+    window.removeEventListener("scroll", closeFloatingCatMenu, true);
+  }
+  function floatingCatOutside(e){
+    var m = document.getElementById("floatingCatMenu");
+    if(m && !m.contains(e.target)) closeFloatingCatMenu();
+  }
+  function openCategoryMenuAt(anchor, currentVal, onPick){
+    closeFloatingCatMenu();
+    var menu = el("div","cat-dropdown-menu");
+    menu.id = "floatingCatMenu";
+    var itemsWrap = el("div","cat-dropdown-items");
+    menu.appendChild(itemsWrap);
+    menu.appendChild(el("div","cat-dropdown-divider"));
+    var addItem = el("div","cat-dropdown-item add-new",{text:"+ Añadir categoría"});
+    addItem.addEventListener("click", function(ev){
+      ev.stopPropagation();
+      closeFloatingCatMenu();
+      promptNewCategory(function(v){ addCustomCategory(v); onPick(v); });
+    });
+    menu.appendChild(addItem);
+    function renderItems(){
+      itemsWrap.innerHTML = "";
+      getCategories().forEach(function(c){
+        var item = el("div","cat-dropdown-item" + (c===currentVal?" selected":""));
+        var label = el("span","cat-item-label",{text:c});
+        item.appendChild(label);
+        var delBtn = el("button","cat-item-del",{type:"button","aria-label":"Eliminar categoría"});
+        delBtn.innerHTML = "&times;";
+        delBtn.addEventListener("click", function(ev){
+          ev.stopPropagation();
+          if(!deleteCategory(c)) return;
+          renderItems();
+        });
+        item.appendChild(delBtn);
+        label.addEventListener("click", function(ev){
+          ev.stopPropagation();
+          closeFloatingCatMenu();
+          onPick(c);
+        });
+        itemsWrap.appendChild(item);
+      });
+    }
+    renderItems();
+    document.body.appendChild(menu);
+    var rect = anchor.getBoundingClientRect();
+    var margin = 8, menuWidth = 210;
+    var left = Math.max(margin, Math.min(rect.left, window.innerWidth - menuWidth - margin));
+    menu.style.left = left + "px";
+    menu.style.width = menuWidth + "px";
+    var spaceBelow = window.innerHeight - rect.bottom - margin;
+    if(spaceBelow < 200 && rect.top - margin > spaceBelow){
+      menu.style.bottom = (window.innerHeight - rect.top + 6) + "px";
+      menu.style.maxHeight = Math.min(280, rect.top - margin) + "px";
+    } else {
+      menu.style.top = (rect.bottom + 6) + "px";
+      menu.style.maxHeight = Math.min(280, spaceBelow) + "px";
+    }
+    setTimeout(function(){
+      document.addEventListener("click", floatingCatOutside, true);
+      window.addEventListener("scroll", closeFloatingCatMenu, true);
+    }, 0);
+  }
+
   function buildCatRow(year, month, cat){
     var row = el("div","cat-row");
     var tag = el("span","cat-tag",{text:cat.cat});
+    tag.title = "Cambiar categoría";
+    tag.style.cursor = "pointer";
+    tag.addEventListener("click", function(ev){
+      ev.stopPropagation();
+      openCategoryMenuAt(tag, cat.cat, function(v){
+        cat.cat = v;
+        save();
+        renderSelectedMonth();
+      });
+    });
     var desc = el("span","cat-desc",{text:cat.desc || ""});
     desc.title = "Editar descripción";
     desc.addEventListener("click", function(ev){
@@ -1732,30 +1906,11 @@
       var addItem = el("div","cat-dropdown-item add-new",{text:"+ Añadir categoría"});
       addItem.addEventListener("click", function(ev){
         ev.stopPropagation();
-        var box = el("div","cat-dropdown-new-input");
-        var input = el("input");
-        input.type = "text";
-        input.placeholder = "Nueva categoría";
-        var okBtn = el("button",null,{text:"OK", type:"button"});
-        box.appendChild(input);
-        box.appendChild(okBtn);
-        addItem.replaceWith(box);
-        input.focus();
-        function commitNew(){
-          var v = input.value.trim();
-          if(!v) return;
-          if(state.customCategories.indexOf(v) === -1){
-            state.customCategories.push(v);
-            save();
-          }
+        closeMenu();
+        promptNewCategory(function(v){
+          addCustomCategory(v);
           selectValue(v);
-        }
-        okBtn.addEventListener("click", function(ev){ ev.stopPropagation(); commitNew(); });
-        input.addEventListener("keydown", function(e){
-          if(e.key === "Enter"){ e.preventDefault(); commitNew(); }
-          if(e.key === "Escape"){ closeMenu(); }
         });
-        input.addEventListener("click", function(ev){ ev.stopPropagation(); });
       });
       menu.appendChild(addItem);
       document.body.appendChild(menu);
@@ -2189,14 +2344,19 @@
     return results;
   }
 
-  function mapCategoriaRaw(raw){
-    if(!raw) return getCategories()[0] || "Otros";
-    var norm = raw.trim();
+  function mapCategoriaRaw(raw, concepto){
     var cats = getCategories();
+    var norm = (raw || "").trim().toLowerCase();
+    // coincidencia exacta con una categoría existente
     for(var i=0;i<cats.length;i++){
-      if(cats[i].toLowerCase() === norm.toLowerCase()) return cats[i];
+      if(cats[i].toLowerCase() === norm) return cats[i];
     }
-    return norm;
+    function has(c){ return cats.indexOf(c) !== -1; }
+    var s = (norm + " " + (concepto || "").toLowerCase());
+    if(has("Suscripciones") && /suscrip|netflix|spotify|hbo|disney|prime video|ps ?plus|psplus|playstation|xbox|game ?pass|youtube|icloud|apple\.com|google one|patreon|twitch|storage|dazn|crunchyroll/.test(s)) return "Suscripciones";
+    if(has("Transporte") && /transport|taxi|uber|cabify|bolt|bus|emt|metro|renfe|tren|cercan|gasolin|combustib|repsol|cepsa|bp |parking|peaje|blabla|vuelo|iberia|ryanair|vueling/.test(s)) return "Transporte";
+    if(has("Compras") && /compra|tienda|super|mercad|aliment|amazon|el corte|zara|store|shop|ropa|market|carrefour|mercadona|lidl|aliexpress|paypal/.test(s)) return "Compras";
+    return cats[0] || "Compras";
   }
 
   function sortMonthCategoriesByDate(md){
@@ -2212,7 +2372,7 @@
   function commitImport(items){
     items.forEach(function(t){
       if(getCategories().indexOf(t.categoria) === -1){
-        state.customCategories.push(t.categoria);
+        t.categoria = getCategories()[0] || "Compras";
       }
       var y = t.date.getFullYear(), m = t.date.getMonth();
       var md = getMonthData(y, m);
@@ -2307,7 +2467,7 @@
 
     var list = el("div","import-list");
     var items = freshList.slice();
-    items.forEach(function(t){ t.categoria = mapCategoriaRaw(t.categoriaRaw); });
+    items.forEach(function(t){ t.categoria = mapCategoriaRaw(t.categoriaRaw, t.concepto); });
 
     var footer = el("div","import-footer");
     var cancelBtn = el("button","btn btn-ghost",{type:"button",text:"Cancelar"});
