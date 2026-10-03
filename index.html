@@ -65,49 +65,7 @@
     align-items:center;
     justify-content:space-between;
     margin-bottom:22px;
-    position:relative;
   }
-  /* Puntito de estado de sincronización, centrado arriba */
-  .sync-dot{
-    position:absolute;
-    left:50%;
-    top:50%;
-    transform:translate(-50%,-50%);
-    display:flex;
-    align-items:center;
-    pointer-events:none;
-  }
-  .sync-dot[hidden]{display:none;}
-  .sync-dot-text{display:none;}
-  .sync-dot .dot{
-    width:11px;height:11px;border-radius:50%;
-    background:#c2c8d2;
-    transition:background .25s ease;
-  }
-  .sync-dot.off .dot{background:#c2c8d2;}      /* gris: sin conexión / local */
-  .sync-dot.syncing .dot{background:#2f6df6; animation:cloudpulse 1s ease-in-out infinite;} /* azul: sincronizando */
-  .sync-dot.ok .dot{background:#2ea86a;}       /* verde: sincronizado */
-  /* Calculadora flotante abajo a la derecha */
-  .calc-fab{
-    position:fixed;
-    right:18px;
-    bottom:18px;
-    z-index:900;
-    width:56px;height:56px;
-    border-radius:50%;
-    background:var(--accent);
-    color:#fff;
-    border:none;
-    cursor:pointer;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    box-shadow:0 6px 18px rgba(47,93,251,0.40), 0 2px 6px rgba(20,24,31,0.18);
-    transition:background .15s, transform .12s;
-  }
-  .calc-fab:active{transform:scale(0.94);}
-  .calc-fab.active{background:#1e50e0;}
-  .calc-fab svg{stroke:#fff;}
   header.topbar h1{
     font-size:22px;
     font-weight:800;
@@ -274,40 +232,10 @@
     color:var(--text);
     cursor:text;
     border-bottom:1px dashed transparent;
-    user-select:none;
-    -webkit-user-select:none;
-    -webkit-touch-callout:none;
-    touch-action:manipulation;
   }
   .figure.estimated .value:hover{
     border-bottom:1px dashed var(--text-faint);
   }
-  .apply-all-menu{
-    position:fixed;
-    background:#fff;
-    border:1px solid var(--border);
-    border-radius:12px;
-    box-shadow:0 10px 28px rgba(20,24,31,0.16);
-    padding:6px;
-    z-index:2000;
-    min-width:210px;
-  }
-  .apply-all-item{
-    display:block;
-    width:100%;
-    text-align:left;
-    background:none;
-    border:none;
-    font:inherit;
-    font-size:13.5px;
-    font-weight:500;
-    color:var(--text);
-    padding:10px 12px;
-    border-radius:8px;
-    cursor:pointer;
-    white-space:nowrap;
-  }
-  .apply-all-item:hover{background:var(--accent-soft);color:var(--accent);}
   .figure.spent{text-align:right;}
   .figure.spent .value.good{color:var(--status-blue);}
   .figure.spent .value.bad{color:var(--status-red);}
@@ -365,12 +293,6 @@
     display:block;
     box-sizing:border-box;
   }
-  .cat-row .cat-mid{
-    min-width:0;
-    display:flex;
-    flex-direction:column;
-    gap:1px;
-  }
   .cat-row .cat-desc{
     font-size:13.5px;
     color:var(--text-soft);
@@ -378,12 +300,6 @@
     text-overflow:ellipsis;
     white-space:nowrap;
     min-width:0;
-  }
-  .cat-row .cat-date{
-    font-size:11px;
-    color:var(--text-faint);
-    font-weight:500;
-    white-space:nowrap;
   }
   .cat-row .cat-amount{
     font-size:14px;
@@ -780,115 +696,6 @@
   .secret-summary-net .value.pos{color:var(--good);}
   .secret-summary-net .value.neg{color:var(--bad);}
 
-  .secret-toolbar{
-    max-width:640px;
-    margin:0 auto 14px;
-    display:flex;
-    align-items:center;
-    gap:8px;
-  }
-  .secret-search-wrap{
-    position:relative;
-    flex:1;
-    min-width:0;
-    display:flex;
-    align-items:center;
-  }
-  .secret-sort-btn{
-    flex-shrink:0;
-    width:46px;height:46px;
-    border:1px solid var(--border);
-    border-radius:14px;
-    background:var(--card);
-    color:var(--text-soft);
-    box-shadow:var(--shadow);
-    cursor:pointer;
-    display:flex;align-items:center;justify-content:center;
-    transition:border-color .15s, color .15s, background .15s;
-  }
-  .secret-sort-btn:hover,.secret-sort-btn.active{
-    border-color:var(--accent);
-    color:var(--accent);
-    background:var(--accent-soft);
-  }
-  .secret-sort-menu{
-    position:fixed;
-    background:#fff;
-    border:1px solid var(--border);
-    border-radius:14px;
-    box-shadow:0 12px 32px rgba(20,24,31,0.18);
-    padding:6px;
-    z-index:2600;
-    min-width:210px;
-  }
-  .secret-sort-title{
-    font-size:11px;
-    font-weight:700;
-    text-transform:uppercase;
-    letter-spacing:.05em;
-    color:var(--text-faint);
-    padding:8px 12px 6px;
-  }
-  .secret-sort-item{
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    gap:10px;
-    width:100%;
-    background:none;border:none;
-    font:inherit;font-size:14px;font-weight:500;
-    color:var(--text);
-    padding:10px 12px;
-    border-radius:9px;
-    cursor:pointer;
-    text-align:left;
-  }
-  .secret-sort-item:hover{background:var(--accent-soft);color:var(--accent);}
-  .secret-sort-item.active{color:var(--accent);font-weight:700;}
-  .secret-sort-item .arrow{font-size:15px;line-height:1;opacity:.85;}
-  .secret-search-ico{
-    position:absolute;
-    left:14px;
-    color:var(--text-faint);
-    pointer-events:none;
-  }
-  .secret-search{
-    width:100%;
-    box-sizing:border-box;
-    padding:12px 38px 12px 40px;
-    border:1px solid var(--border);
-    border-radius:999px;
-    background:var(--card);
-    font-family:inherit;
-    font-size:15px;
-    color:var(--text);
-    box-shadow:var(--shadow);
-    outline:none;
-    transition:border-color .15s, box-shadow .15s;
-  }
-  .secret-search:focus{
-    border-color:var(--accent);
-    box-shadow:0 0 0 3px var(--accent-soft);
-  }
-  .secret-search::placeholder{color:var(--text-faint);}
-  .secret-search-clear{
-    position:absolute;
-    right:8px;
-    width:26px;height:26px;
-    border:none;background:transparent;
-    color:var(--text-faint);
-    font-size:20px;line-height:1;
-    cursor:pointer;
-    border-radius:50%;
-    display:flex;align-items:center;justify-content:center;
-  }
-  .secret-search-clear:hover{background:var(--accent-soft);color:var(--accent);}
-  .secret-empty-search{
-    text-align:center;
-    color:var(--text-faint);
-    font-size:14px;
-    padding:24px 8px;
-  }
   .secret-items{
     display:flex;
     flex-direction:column;
@@ -1373,35 +1180,6 @@
   .cloud-pill.off .dot{ background:#c2c8d2; }
   @keyframes cloudpulse{ 0%,100%{opacity:1;} 50%{opacity:.35;} }
   .cloud-pill[hidden]{display:none;}
-  /* Etiqueta de categoría clicable en cada gasto */
-  .cat-row .cat-tag:hover{ background:var(--accent-soft); color:var(--accent); }
-  /* Modal centrado para nueva categoría */
-  .mini-modal{
-    position:fixed; inset:0; z-index:3000;
-    background:rgba(18,22,30,0.45);
-    -webkit-backdrop-filter:blur(4px); backdrop-filter:blur(4px);
-    display:flex; align-items:center; justify-content:center; padding:22px;
-  }
-  .mini-modal-card{
-    width:100%; max-width:320px; background:var(--card);
-    border-radius:16px; padding:20px;
-    box-shadow:0 18px 50px rgba(0,0,0,0.28);
-    font-family:'Inter',system-ui,sans-serif;
-  }
-  .mini-modal-title{ font-size:16px; font-weight:700; margin:0 0 14px; color:var(--text); }
-  .mini-modal-input{
-    width:100%; box-sizing:border-box; padding:11px 12px;
-    border:1.6px solid var(--border); border-radius:10px;
-    font-size:16px; font-family:inherit; color:var(--text); background:#fff; outline:none;
-  }
-  .mini-modal-input:focus{ border-color:var(--accent); }
-  .mini-modal-actions{ display:flex; gap:10px; margin-top:16px; justify-content:flex-end; }
-  .mini-modal-btn{
-    padding:10px 16px; border-radius:10px; border:none;
-    font:inherit; font-weight:600; font-size:14px; cursor:pointer;
-  }
-  .mini-modal-btn.ghost{ background:var(--accent-soft); color:var(--text); }
-  .mini-modal-btn.primary{ background:var(--accent); color:#fff; }
 </style>
 </head>
 <body>
@@ -1410,6 +1188,10 @@
   <header class="topbar">
     <h1>Gastos</h1>
     <div class="topbar-right">
+      <span class="cloud-pill off" id="cloudPill" hidden><span class="dot"></span><span id="cloudPillText">Local</span></span>
+      <button id="calcToggle" class="icon-btn" aria-label="Abrir calculadora" type="button">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><rect x="4" y="2.5" width="16" height="19" rx="2.5" stroke="currentColor" stroke-width="1.8"/><rect x="7" y="5.5" width="10" height="4" rx="1" stroke="currentColor" stroke-width="1.8"/><circle cx="7.8" cy="13.5" r="1.15" fill="currentColor"/><circle cx="12" cy="13.5" r="1.15" fill="currentColor"/><circle cx="16.2" cy="13.5" r="1.15" fill="currentColor"/><circle cx="7.8" cy="17.3" r="1.15" fill="currentColor"/><circle cx="12" cy="17.3" r="1.15" fill="currentColor"/><circle cx="16.2" cy="17.3" r="1.15" fill="currentColor"/></svg>
+      </button>
       <div class="month-year-select">
         <button id="monthSelectBtn" class="my-select" type="button">
           <span id="monthSelectLabel">—</span>
@@ -1429,10 +1211,6 @@
     <button class="reset-link" id="resetBtn">Borrar todos los datos</button>
   </footer>
 </div>
-
-<button id="calcToggle" class="calc-fab" aria-label="Abrir calculadora" type="button">
-  <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><rect x="4" y="2.5" width="16" height="19" rx="2.5" stroke="currentColor" stroke-width="1.8"/><rect x="7" y="5.5" width="10" height="4" rx="1" stroke="currentColor" stroke-width="1.8"/><circle cx="7.8" cy="13.5" r="1.15" fill="currentColor"/><circle cx="12" cy="13.5" r="1.15" fill="currentColor"/><circle cx="16.2" cy="13.5" r="1.15" fill="currentColor"/><circle cx="7.8" cy="17.3" r="1.15" fill="currentColor"/><circle cx="12" cy="17.3" r="1.15" fill="currentColor"/><circle cx="16.2" cy="17.3" r="1.15" fill="currentColor"/></svg>
-</button>
 
 <div class="cloud-login" id="cloudLogin" hidden>
   <div class="cloud-login-card">
@@ -1471,16 +1249,6 @@
       <div class="value" id="secretNetBenefit">0,00 €</div>
     </div>
   </div>
-  <div class="secret-toolbar">
-    <div class="secret-search-wrap">
-      <svg class="secret-search-ico" width="16" height="16" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2"/><path d="M21 21l-4.3-4.3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-      <input type="text" id="secretSearch" class="secret-search" placeholder="Buscar producto…" autocomplete="off" autocapitalize="none" spellcheck="false">
-      <button type="button" id="secretSearchClear" class="secret-search-clear" aria-label="Limpiar" hidden>&times;</button>
-    </div>
-    <button type="button" id="secretSortBtn" class="secret-sort-btn" aria-label="Ordenar">
-      <svg width="19" height="19" viewBox="0 0 24 24" fill="none"><path d="M7 5v14M7 5l-3 3M7 5l3 3M17 19V5M17 19l-3-3M17 19l3-3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
-    </button>
-  </div>
   <div class="secret-items" id="secretItemsContainer"></div>
   <button id="secretAddBtn" class="add-row-btn secret-add-btn" type="button"><span>+</span> Añadir producto</button>
 </div>
@@ -1507,7 +1275,7 @@
   var CLOUD = { enabled:false, db:null, auth:null, user:null, ready:false, pushTimers:{}, applying:false, unsub:{} };
 
   var MONTH_NAMES = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
-  var DEFAULT_CATEGORIES = ["Compras","Suscripciones","Transporte"];
+  var DEFAULT_CATEGORIES = ["Vivienda","Alimentación","Transporte","Ocio","Salud","Compras","Suscripciones","Ahorro","Otros"];
   var STORAGE_KEY = "gastos-app-v1";
 
   var todayReal = new Date();
@@ -1582,28 +1350,6 @@
     state = seedState();
   }
   normalizeState();
-
-  /* --- Migración única: dejar las categorías en las 3 deseadas y
-     reconvertir los gastos ya importados (categorías de ING) a ellas. --- */
-  (function catsResetV1(){
-    try{
-      if(localStorage.getItem("cats-reset-v1") === "done") return;
-      state.customCategories = [];
-      state.hiddenDefaults = [];
-      Object.keys(state.data || {}).forEach(function(y){
-        Object.keys(state.data[y] || {}).forEach(function(m){
-          var md = state.data[y][m];
-          (md.categories || []).forEach(function(g){
-            if(DEFAULT_CATEGORIES.indexOf(g.cat) === -1){
-              g.cat = mapCategoriaRaw(g.cat, g.desc);
-            }
-          });
-        });
-      });
-      localStorage.setItem("cats-reset-v1", "done");
-      save();
-    }catch(e){}
-  })();
 
   function getCategories(){
     var list = DEFAULT_CATEGORIES.filter(function(c){
@@ -1776,135 +1522,9 @@
     });
   });
 
-  function addCustomCategory(v){
-    v = (v || "").trim();
-    if(!v) return;
-    if(getCategories().indexOf(v) === -1){
-      state.customCategories.push(v);
-      save();
-    }
-  }
-
-  // Modal centrado para escribir el nombre de una nueva categoría
-  // (centrado para que el teclado del móvil no lo tape ni lo cierre).
-  function promptNewCategory(cb){
-    var overlay = el("div","mini-modal");
-    var card = el("div","mini-modal-card");
-    var title = el("div","mini-modal-title",{text:"Nueva categoría"});
-    var input = el("input","mini-modal-input");
-    input.type = "text";
-    input.placeholder = "Nombre de la categoría";
-    input.setAttribute("autocapitalize","sentences");
-    input.setAttribute("autocomplete","off");
-    var actions = el("div","mini-modal-actions");
-    var cancel = el("button","mini-modal-btn ghost",{type:"button", text:"Cancelar"});
-    var ok = el("button","mini-modal-btn primary",{type:"button", text:"Guardar"});
-    actions.appendChild(cancel);
-    actions.appendChild(ok);
-    card.appendChild(title);
-    card.appendChild(input);
-    card.appendChild(actions);
-    overlay.appendChild(card);
-    document.body.appendChild(overlay);
-    function close(){ overlay.remove(); }
-    function submit(){
-      var v = input.value.trim();
-      close();
-      if(v) cb(v);
-    }
-    card.addEventListener("click", function(e){ e.stopPropagation(); });
-    overlay.addEventListener("click", function(){ close(); });
-    cancel.addEventListener("click", function(e){ e.stopPropagation(); close(); });
-    ok.addEventListener("click", function(e){ e.stopPropagation(); submit(); });
-    input.addEventListener("keydown", function(e){
-      if(e.key === "Enter"){ e.preventDefault(); submit(); }
-      if(e.key === "Escape"){ close(); }
-    });
-    setTimeout(function(){ input.focus(); }, 60);
-  }
-
-  // Menú flotante de categorías anclado a un elemento (para cambiar la
-  // categoría de un gasto ya existente tocando su etiqueta).
-  function closeFloatingCatMenu(){
-    var m = document.getElementById("floatingCatMenu");
-    if(m) m.remove();
-    document.removeEventListener("click", floatingCatOutside, true);
-    window.removeEventListener("scroll", closeFloatingCatMenu, true);
-  }
-  function floatingCatOutside(e){
-    var m = document.getElementById("floatingCatMenu");
-    if(m && !m.contains(e.target)) closeFloatingCatMenu();
-  }
-  function openCategoryMenuAt(anchor, currentVal, onPick){
-    closeFloatingCatMenu();
-    var menu = el("div","cat-dropdown-menu");
-    menu.id = "floatingCatMenu";
-    var itemsWrap = el("div","cat-dropdown-items");
-    menu.appendChild(itemsWrap);
-    menu.appendChild(el("div","cat-dropdown-divider"));
-    var addItem = el("div","cat-dropdown-item add-new",{text:"+ Añadir categoría"});
-    addItem.addEventListener("click", function(ev){
-      ev.stopPropagation();
-      closeFloatingCatMenu();
-      promptNewCategory(function(v){ addCustomCategory(v); onPick(v); });
-    });
-    menu.appendChild(addItem);
-    function renderItems(){
-      itemsWrap.innerHTML = "";
-      getCategories().forEach(function(c){
-        var item = el("div","cat-dropdown-item" + (c===currentVal?" selected":""));
-        var label = el("span","cat-item-label",{text:c});
-        item.appendChild(label);
-        var delBtn = el("button","cat-item-del",{type:"button","aria-label":"Eliminar categoría"});
-        delBtn.innerHTML = "&times;";
-        delBtn.addEventListener("click", function(ev){
-          ev.stopPropagation();
-          if(!deleteCategory(c)) return;
-          renderItems();
-        });
-        item.appendChild(delBtn);
-        label.addEventListener("click", function(ev){
-          ev.stopPropagation();
-          closeFloatingCatMenu();
-          onPick(c);
-        });
-        itemsWrap.appendChild(item);
-      });
-    }
-    renderItems();
-    document.body.appendChild(menu);
-    var rect = anchor.getBoundingClientRect();
-    var margin = 8, menuWidth = 210;
-    var left = Math.max(margin, Math.min(rect.left, window.innerWidth - menuWidth - margin));
-    menu.style.left = left + "px";
-    menu.style.width = menuWidth + "px";
-    var spaceBelow = window.innerHeight - rect.bottom - margin;
-    if(spaceBelow < 200 && rect.top - margin > spaceBelow){
-      menu.style.bottom = (window.innerHeight - rect.top + 6) + "px";
-      menu.style.maxHeight = Math.min(280, rect.top - margin) + "px";
-    } else {
-      menu.style.top = (rect.bottom + 6) + "px";
-      menu.style.maxHeight = Math.min(280, spaceBelow) + "px";
-    }
-    setTimeout(function(){
-      document.addEventListener("click", floatingCatOutside, true);
-      window.addEventListener("scroll", closeFloatingCatMenu, true);
-    }, 0);
-  }
-
   function buildCatRow(year, month, cat){
     var row = el("div","cat-row");
     var tag = el("span","cat-tag",{text:cat.cat});
-    tag.title = "Cambiar categoría";
-    tag.style.cursor = "pointer";
-    tag.addEventListener("click", function(ev){
-      ev.stopPropagation();
-      openCategoryMenuAt(tag, cat.cat, function(v){
-        cat.cat = v;
-        save();
-        renderSelectedMonth();
-      });
-    });
     var desc = el("span","cat-desc",{text:cat.desc || ""});
     desc.title = "Editar descripción";
     desc.addEventListener("click", function(ev){
@@ -1939,15 +1559,8 @@
       renderSelectedMonth();
     });
 
-    var mid = el("div","cat-mid");
-    mid.appendChild(desc);
-    var shortFecha = formatShortFecha(cat.fecha);
-    if(shortFecha){
-      mid.appendChild(el("span","cat-date",{text: shortFecha}));
-    }
-
     row.appendChild(tag);
-    row.appendChild(mid);
+    row.appendChild(desc);
     row.appendChild(amount);
     row.appendChild(del);
     return row;
@@ -2044,11 +1657,30 @@
       var addItem = el("div","cat-dropdown-item add-new",{text:"+ Añadir categoría"});
       addItem.addEventListener("click", function(ev){
         ev.stopPropagation();
-        closeMenu();
-        promptNewCategory(function(v){
-          addCustomCategory(v);
+        var box = el("div","cat-dropdown-new-input");
+        var input = el("input");
+        input.type = "text";
+        input.placeholder = "Nueva categoría";
+        var okBtn = el("button",null,{text:"OK", type:"button"});
+        box.appendChild(input);
+        box.appendChild(okBtn);
+        addItem.replaceWith(box);
+        input.focus();
+        function commitNew(){
+          var v = input.value.trim();
+          if(!v) return;
+          if(state.customCategories.indexOf(v) === -1){
+            state.customCategories.push(v);
+            save();
+          }
           selectValue(v);
+        }
+        okBtn.addEventListener("click", function(ev){ ev.stopPropagation(); commitNew(); });
+        input.addEventListener("keydown", function(e){
+          if(e.key === "Enter"){ e.preventDefault(); commitNew(); }
+          if(e.key === "Escape"){ closeMenu(); }
         });
+        input.addEventListener("click", function(ev){ ev.stopPropagation(); });
       });
       menu.appendChild(addItem);
       document.body.appendChild(menu);
@@ -2183,7 +1815,7 @@
       var amt = parseFloat(amountInput.value);
       if(isNaN(amt) || amt < 0) amt = 0;
       var md = getMonthData(year, month);
-      md.categories.push({id: uid(), cat: catName, desc: descInput.value.trim(), amount: amt, fecha: formatFecha(new Date())});
+      md.categories.push({id: uid(), cat: catName, desc: descInput.value.trim(), amount: amt});
       save();
       addFormOpenFor = null;
       renderSelectedMonth();
@@ -2201,78 +1833,13 @@
     return wrap;
   }
 
-  function closeApplyAllMenu(){
-    var m = document.getElementById("applyAllMenu");
-    if(m) m.remove();
-    document.removeEventListener("click", onApplyAllDocClick, false);
-    window.removeEventListener("scroll", closeApplyAllMenu, true);
-    window.removeEventListener("resize", closeApplyAllMenu);
-  }
-  function onApplyAllDocClick(e){
-    var m = document.getElementById("applyAllMenu");
-    if(m && !m.contains(e.target)) closeApplyAllMenu();
-  }
-  function showApplyAllMenu(anchor, year, md){
-    closeApplyAllMenu();
-    var menu = el("div","apply-all-menu");
-    menu.id = "applyAllMenu";
-    var btn = el("button","apply-all-item",{text:"Aplicar a todos los meses"});
-    btn.type = "button";
-    btn.addEventListener("click", function(ev){
-      ev.stopPropagation();
-      var val = md.estimated || 0;
-      for(var mo=0; mo<12; mo++){
-        getMonthData(year, mo).estimated = val;
-      }
-      save();
-      closeApplyAllMenu();
-      renderSelectedMonth();
-    });
-    menu.appendChild(btn);
-    document.body.appendChild(menu);
-    var r = anchor.getBoundingClientRect();
-    var mw = menu.offsetWidth || 210;
-    var left = Math.max(8, Math.min(r.left, window.innerWidth - mw - 8));
-    var top = r.bottom + 6;
-    if(top + menu.offsetHeight > window.innerHeight - 8){
-      top = Math.max(8, r.top - menu.offsetHeight - 6);
-    }
-    menu.style.left = left + "px";
-    menu.style.top = top + "px";
-    setTimeout(function(){
-      document.addEventListener("click", onApplyAllDocClick, false);
-      window.addEventListener("scroll", closeApplyAllMenu, true);
-      window.addEventListener("resize", closeApplyAllMenu);
-    }, 0);
-  }
-
   function buildEstimatedFigure(year, month, md){
     var figure = el("div","figure estimated");
     var label = el("div","label",{text:"Gastos estimados"});
     var value = el("div","value",{text: fmt.format(md.estimated||0)});
-    value.title = "Editar presupuesto estimado (mantén pulsado para más opciones)";
-
-    // Mantener pulsado -> menú "Aplicar a todos los meses"
-    var lpTimer = null, lpFired = false, sx = 0, sy = 0;
-    function clearLp(){ if(lpTimer){ clearTimeout(lpTimer); lpTimer = null; } }
-    value.addEventListener("pointerdown", function(ev){
-      lpFired = false; sx = ev.clientX; sy = ev.clientY;
-      clearLp();
-      lpTimer = setTimeout(function(){
-        lpFired = true;
-        if(navigator.vibrate){ try{ navigator.vibrate(15); }catch(e){} }
-        showApplyAllMenu(value, year, md);
-      }, 480);
-    });
-    value.addEventListener("pointermove", function(ev){
-      if(lpTimer && (Math.abs(ev.clientX - sx) > 10 || Math.abs(ev.clientY - sy) > 10)) clearLp();
-    });
-    value.addEventListener("pointerup", clearLp);
-    value.addEventListener("pointercancel", clearLp);
-
+    value.title = "Editar presupuesto estimado";
     value.addEventListener("click", function(ev){
       ev.stopPropagation();
-      if(lpFired){ lpFired = false; return; } // fue mantener pulsado, no editar
       var input = el("input");
       input.type = "number";
       input.min = "0";
@@ -2482,19 +2049,14 @@
     return results;
   }
 
-  function mapCategoriaRaw(raw, concepto){
+  function mapCategoriaRaw(raw){
+    if(!raw) return getCategories()[0] || "Otros";
+    var norm = raw.trim();
     var cats = getCategories();
-    var norm = (raw || "").trim().toLowerCase();
-    // coincidencia exacta con una categoría existente
     for(var i=0;i<cats.length;i++){
-      if(cats[i].toLowerCase() === norm) return cats[i];
+      if(cats[i].toLowerCase() === norm.toLowerCase()) return cats[i];
     }
-    function has(c){ return cats.indexOf(c) !== -1; }
-    var s = (norm + " " + (concepto || "").toLowerCase());
-    if(has("Suscripciones") && /suscrip|netflix|spotify|hbo|disney|prime video|ps ?plus|psplus|playstation|xbox|game ?pass|youtube|icloud|apple\.com|google one|patreon|twitch|storage|dazn|crunchyroll/.test(s)) return "Suscripciones";
-    if(has("Transporte") && /transport|taxi|uber|cabify|bolt|bus|emt|metro|renfe|tren|cercan|gasolin|combustib|repsol|cepsa|bp |parking|peaje|blabla|vuelo|iberia|ryanair|vueling/.test(s)) return "Transporte";
-    if(has("Compras") && /compra|tienda|super|mercad|aliment|amazon|el corte|zara|store|shop|ropa|market|carrefour|mercadona|lidl|aliexpress|paypal/.test(s)) return "Compras";
-    return cats[0] || "Compras";
+    return norm;
   }
 
   function sortMonthCategoriesByDate(md){
@@ -2510,7 +2072,7 @@
   function commitImport(items){
     items.forEach(function(t){
       if(getCategories().indexOf(t.categoria) === -1){
-        t.categoria = getCategories()[0] || "Compras";
+        state.customCategories.push(t.categoria);
       }
       var y = t.date.getFullYear(), m = t.date.getMonth();
       var md = getMonthData(y, m);
@@ -2605,7 +2167,7 @@
 
     var list = el("div","import-list");
     var items = freshList.slice();
-    items.forEach(function(t){ t.categoria = mapCategoriaRaw(t.categoriaRaw, t.concepto); });
+    items.forEach(function(t){ t.categoria = mapCategoriaRaw(t.categoriaRaw); });
 
     var footer = el("div","import-footer");
     var cancelBtn = el("button","btn btn-ghost",{type:"button",text:"Cancelar"});
@@ -2740,29 +2302,6 @@
   secretState = loadSecretState() || seedSecretState();
   if(!secretState.items) secretState.items = [];
 
-  /* --- Restauración única de las operaciones del usuario ---
-     Se ejecuta una sola vez por dispositivo. Repone las transacciones
-     reales y las marca como recientes para que se suban a la nube. */
-  (function restoreSecretV1(){
-    try{
-      if(localStorage.getItem("restore-secret-v1") === "done") return;
-      secretState = { items: [
-        { id:"r1", title:"Asics grises",        comprado:{fecha:"25-03-26", precio:7},  subido:{fecha:"03-04-26", precio:70},    vendido:{fecha:"", precio:70} },
-        { id:"r2", title:"Air max 95 x Corteiz", comprado:{fecha:"11-04-26", precio:35}, subido:{fecha:"20-04-26", precio:79},    vendido:{fecha:"21-04-26", precio:79} },
-        { id:"r3", title:"Asics rosas",          comprado:{fecha:"19-04-26", precio:30}, subido:{fecha:"01-05-26", precio:75},    vendido:{fecha:"03-05-26", precio:75} },
-        { id:"r4", title:"Nike supreme",         comprado:{fecha:"19-04-26", precio:40}, subido:{fecha:"02-05-26", precio:85},    vendido:{fecha:"13-07-26", precio:85} },
-        { id:"r5", title:"Asics rosas 2",        comprado:{fecha:"08-06-26", precio:37}, subido:{fecha:"10-07-26", precio:89.99}, vendido:{fecha:"12-07-26", precio:85} },
-        { id:"r6", title:"Pantalon Corteiz",     comprado:{fecha:"08-06-26", precio:26}, subido:{fecha:"09-07-26", precio:55},    vendido:{fecha:"", precio:""} },
-        { id:"r7", title:"Camiseta España",      comprado:{fecha:"08-06-26", precio:11}, subido:{fecha:"", precio:""},            vendido:{fecha:"", precio:""} },
-        { id:"r8", title:"Camiseta brasil",      comprado:{fecha:"08-06-26", precio:11}, subido:{fecha:"", precio:""},            vendido:{fecha:"", precio:""} }
-      ] };
-      var ts = Date.now();
-      localStorage.setItem(SECRET_STORAGE_KEY, JSON.stringify(secretState));
-      localStorage.setItem(SECRET_STORAGE_KEY + "__ts", String(ts));
-      localStorage.setItem("restore-secret-v1", "done");
-    }catch(e){}
-  })();
-
   function saveSecret(){
     var ts = Date.now();
     try{
@@ -2837,12 +2376,6 @@
   }
   function formatFecha(d){
     return pad2(d.getDate()) + "-" + pad2(d.getMonth()+1) + "-" + String(d.getFullYear()).slice(-2);
-  }
-  var MONTH_ABBR = ["ene","feb","mar","abr","may","jun","jul","ago","sep","oct","nov","dic"];
-  function formatShortFecha(fechaStr){
-    var d = parseFechaStr(fechaStr);
-    if(!d) return "";
-    return d.getDate() + " " + MONTH_ABBR[d.getMonth()];
   }
   function sameDay(a,b){
     return a.getFullYear()===b.getFullYear() && a.getMonth()===b.getMonth() && a.getDate()===b.getDate();
@@ -3057,22 +2590,12 @@
     return card;
   }
 
-  var secretSearchQuery = "";
   function renderSecretItems(){
     var container = document.getElementById("secretItemsContainer");
     container.innerHTML = "";
-    var q = secretSearchQuery.trim().toLowerCase();
-    var list = secretState.items.filter(function(item){
-      if(!q) return true;
-      return (item.title || "").toLowerCase().indexOf(q) !== -1;
+    secretState.items.forEach(function(item){
+      container.appendChild(buildSecretCard(item));
     });
-    if(list.length === 0 && q){
-      container.appendChild(el("div","secret-empty-search",{text:"Sin resultados para “" + secretSearchQuery.trim() + "”"}));
-    } else {
-      list.forEach(function(item){
-        container.appendChild(buildSecretCard(item));
-      });
-    }
     renderSecretSummary();
   }
 
@@ -3088,9 +2611,6 @@
 
   document.getElementById("secretBack").addEventListener("click", closeSecretTab);
   document.getElementById("secretAddBtn").addEventListener("click", function(){
-    // Al añadir, limpiar la búsqueda para que se vea el producto nuevo
-    var sInput = document.getElementById("secretSearch");
-    if(sInput && secretSearchQuery){ sInput.value = ""; secretSearchQuery = ""; updateSecretClearBtn(); }
     secretState.items.push({
       id: uid(),
       title: "",
@@ -3102,102 +2622,6 @@
     renderSecretItems();
   });
 
-  // ---- Barra de búsqueda de productos ----
-  function updateSecretClearBtn(){
-    var clr = document.getElementById("secretSearchClear");
-    if(clr) clr.hidden = !secretSearchQuery;
-  }
-  (function setupSecretSearch(){
-    var input = document.getElementById("secretSearch");
-    var clr = document.getElementById("secretSearchClear");
-    if(!input) return;
-    input.addEventListener("input", function(){
-      secretSearchQuery = input.value;
-      updateSecretClearBtn();
-      renderSecretItems();
-    });
-    if(clr) clr.addEventListener("click", function(){
-      input.value = "";
-      secretSearchQuery = "";
-      updateSecretClearBtn();
-      renderSecretItems();
-      input.focus();
-    });
-  })();
-
-  // ---- Ordenar productos ----
-  var secretSortMode = "";
-  function sortSecretItems(mode){
-    function saleDate(it){ var d = parseFechaStr(it.vendido.fecha); return d ? d.getTime() : null; }
-    function benefit(it){
-      var v = parseFloat(it.vendido.precio);
-      if(isNaN(v)) return null;
-      var c = parseFloat(it.comprado.precio);
-      return v - (isNaN(c) ? 0 : c);
-    }
-    function cmp(a,b,dir){
-      if(a === null && b === null) return 0;
-      if(a === null) return 1;   // los que no tienen (sin venta) van al final
-      if(b === null) return -1;
-      return dir === "asc" ? a - b : b - a;
-    }
-    var arr = secretState.items.slice();
-    if(mode === "fecha-asc") arr.sort(function(a,b){ return cmp(saleDate(a),saleDate(b),"asc"); });
-    else if(mode === "fecha-desc") arr.sort(function(a,b){ return cmp(saleDate(a),saleDate(b),"desc"); });
-    else if(mode === "ben-asc") arr.sort(function(a,b){ return cmp(benefit(a),benefit(b),"asc"); });
-    else if(mode === "ben-desc") arr.sort(function(a,b){ return cmp(benefit(a),benefit(b),"desc"); });
-    else return;
-    secretState.items = arr;
-    secretSortMode = mode;
-    saveSecret();
-    renderSecretItems();
-  }
-  function closeSortMenu(){
-    var m = document.getElementById("secretSortMenu");
-    if(m) m.remove();
-    document.removeEventListener("click", sortMenuOutside, true);
-    var btn = document.getElementById("secretSortBtn");
-    if(btn) btn.classList.remove("active");
-  }
-  function sortMenuOutside(e){
-    var m = document.getElementById("secretSortMenu");
-    var btn = document.getElementById("secretSortBtn");
-    if(m && !m.contains(e.target) && e.target !== btn && !(btn && btn.contains(e.target))) closeSortMenu();
-  }
-  (function setupSecretSort(){
-    var btn = document.getElementById("secretSortBtn");
-    if(!btn) return;
-    var OPTS = [
-      {mode:"fecha-asc",  label:"Fecha",     arrow:"↑"},
-      {mode:"fecha-desc", label:"Fecha",     arrow:"↓"},
-      {mode:"ben-asc",    label:"Beneficio", arrow:"↑"},
-      {mode:"ben-desc",   label:"Beneficio", arrow:"↓"}
-    ];
-    btn.addEventListener("click", function(ev){
-      ev.stopPropagation();
-      if(document.getElementById("secretSortMenu")){ closeSortMenu(); return; }
-      var menu = el("div","secret-sort-menu"); menu.id = "secretSortMenu";
-      menu.appendChild(el("div","secret-sort-title",{text:"Ordenar por:"}));
-      OPTS.forEach(function(o){
-        var item = el("button","secret-sort-item" + (secretSortMode===o.mode?" active":""),{type:"button"});
-        item.appendChild(el("span",null,{text:o.label}));
-        item.appendChild(el("span","arrow",{text:o.arrow}));
-        item.addEventListener("click", function(e){ e.stopPropagation(); sortSecretItems(o.mode); closeSortMenu(); });
-        menu.appendChild(item);
-      });
-      document.body.appendChild(menu);
-      btn.classList.add("active");
-      var r = btn.getBoundingClientRect();
-      var mw = menu.offsetWidth || 210;
-      var left = Math.max(8, Math.min(r.right - mw, window.innerWidth - mw - 8));
-      menu.style.left = left + "px";
-      var top = r.bottom + 6;
-      if(top + menu.offsetHeight > window.innerHeight - 8) top = Math.max(8, r.top - menu.offsetHeight - 6);
-      menu.style.top = top + "px";
-      setTimeout(function(){ document.addEventListener("click", sortMenuOutside, true); }, 0);
-    });
-  })();
-
   // ---- Arrastrar (mantener pulsado) para reordenar los bloques de producto ----
   function setupSecretDragReorder(){
     var container = document.getElementById("secretItemsContainer");
@@ -3206,7 +2630,6 @@
 
     container.addEventListener("pointerdown", function(ev){
       if(ev.pointerType === "mouse" && ev.button !== 0) return;
-      if(secretSearchQuery) return; // no reordenar mientras se busca
       var target = ev.target;
       if(target.closest("input,button,select,textarea")) return;
       var card = target.closest(".secret-card");
@@ -3461,9 +2884,7 @@
       right = Math.max(margin, Math.min(right, window.innerWidth - panelWidth - margin));
       panel.style.right = right + "px";
       panel.style.left = "auto";
-      // El botón está abajo: la calculadora se abre hacia arriba
-      panel.style.top = "auto";
-      panel.style.bottom = (window.innerHeight - rect.top + 10) + "px";
+      panel.style.top = (rect.bottom + 8) + "px";
     }
 
     function closePanel(){
