@@ -47,7 +47,7 @@
     --shadow: 0 1px 2px rgba(20,24,31,0.04), 0 1px 12px rgba(20,24,31,0.03);
   }
   *{box-sizing:border-box;}
-  html,body{margin:0;padding:0;}
+  html,body{margin:0;padding:0;width:100%;max-width:100%;overflow-x:hidden;}
   body{
     background:var(--bg);
     color:var(--text);
@@ -65,7 +65,49 @@
     align-items:center;
     justify-content:space-between;
     margin-bottom:22px;
+    position:relative;
   }
+  /* Puntito de estado de sincronización, centrado arriba */
+  .sync-dot{
+    position:absolute;
+    left:50%;
+    top:50%;
+    transform:translate(-50%,-50%);
+    display:flex;
+    align-items:center;
+    pointer-events:none;
+  }
+  .sync-dot[hidden]{display:none;}
+  .sync-dot-text{display:none;}
+  .sync-dot .dot{
+    width:11px;height:11px;border-radius:50%;
+    background:#c2c8d2;
+    transition:background .25s ease;
+  }
+  .sync-dot.off .dot{background:#c2c8d2;}      /* gris: sin conexión / local */
+  .sync-dot.syncing .dot{background:#2f6df6; animation:cloudpulse 1s ease-in-out infinite;} /* azul: sincronizando */
+  .sync-dot.ok .dot{background:#2ea86a;}       /* verde: sincronizado */
+  /* Calculadora flotante abajo a la derecha */
+  .calc-fab{
+    position:fixed;
+    right:18px;
+    bottom:18px;
+    z-index:900;
+    width:56px;height:56px;
+    border-radius:50%;
+    background:var(--accent);
+    color:#fff;
+    border:none;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    box-shadow:0 6px 18px rgba(47,93,251,0.40), 0 2px 6px rgba(20,24,31,0.18);
+    transition:background .15s, transform .12s;
+  }
+  .calc-fab:active{transform:scale(0.94);}
+  .calc-fab.active{background:#1e50e0;}
+  .calc-fab svg{stroke:#fff;}
   header.topbar h1{
     font-size:22px;
     font-weight:800;
@@ -232,10 +274,40 @@
     color:var(--text);
     cursor:text;
     border-bottom:1px dashed transparent;
+    user-select:none;
+    -webkit-user-select:none;
+    -webkit-touch-callout:none;
+    touch-action:manipulation;
   }
   .figure.estimated .value:hover{
     border-bottom:1px dashed var(--text-faint);
   }
+  .apply-all-menu{
+    position:fixed;
+    background:#fff;
+    border:1px solid var(--border);
+    border-radius:12px;
+    box-shadow:0 10px 28px rgba(20,24,31,0.16);
+    padding:6px;
+    z-index:2000;
+    min-width:210px;
+  }
+  .apply-all-item{
+    display:block;
+    width:100%;
+    text-align:left;
+    background:none;
+    border:none;
+    font:inherit;
+    font-size:13.5px;
+    font-weight:500;
+    color:var(--text);
+    padding:10px 12px;
+    border-radius:8px;
+    cursor:pointer;
+    white-space:nowrap;
+  }
+  .apply-all-item:hover{background:var(--accent-soft);color:var(--accent);}
   .figure.spent{text-align:right;}
   .figure.spent .value.good{color:var(--status-blue);}
   .figure.spent .value.bad{color:var(--status-red);}
@@ -293,6 +365,12 @@
     display:block;
     box-sizing:border-box;
   }
+  .cat-row .cat-mid{
+    min-width:0;
+    display:flex;
+    flex-direction:column;
+    gap:1px;
+  }
   .cat-row .cat-desc{
     font-size:13.5px;
     color:var(--text-soft);
@@ -300,6 +378,12 @@
     text-overflow:ellipsis;
     white-space:nowrap;
     min-width:0;
+  }
+  .cat-row .cat-date{
+    font-size:11px;
+    color:var(--text-faint);
+    font-weight:500;
+    white-space:nowrap;
   }
   .cat-row .cat-amount{
     font-size:14px;
@@ -621,10 +705,15 @@
   .secret-overlay{
     position:fixed;
     inset:0;
+    width:100%;
+    max-width:100%;
     background:var(--bg);
     z-index:2000;
     overflow-y:auto;
-    padding:28px 18px 90px;
+    overflow-x:hidden;
+    padding:28px 16px calc(90px + env(safe-area-inset-bottom));
+    padding-left:calc(16px + env(safe-area-inset-left));
+    padding-right:calc(16px + env(safe-area-inset-right));
   }
   .secret-overlay[hidden]{display:none;}
   .secret-topbar{
@@ -696,6 +785,115 @@
   .secret-summary-net .value.pos{color:var(--good);}
   .secret-summary-net .value.neg{color:var(--bad);}
 
+  .secret-toolbar{
+    max-width:640px;
+    margin:0 auto 14px;
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+  .secret-search-wrap{
+    position:relative;
+    flex:1;
+    min-width:0;
+    display:flex;
+    align-items:center;
+  }
+  .secret-sort-btn{
+    flex-shrink:0;
+    width:46px;height:46px;
+    border:1px solid var(--border);
+    border-radius:14px;
+    background:var(--card);
+    color:var(--text-soft);
+    box-shadow:var(--shadow);
+    cursor:pointer;
+    display:flex;align-items:center;justify-content:center;
+    transition:border-color .15s, color .15s, background .15s;
+  }
+  .secret-sort-btn:hover,.secret-sort-btn.active{
+    border-color:var(--accent);
+    color:var(--accent);
+    background:var(--accent-soft);
+  }
+  .secret-sort-menu{
+    position:fixed;
+    background:#fff;
+    border:1px solid var(--border);
+    border-radius:14px;
+    box-shadow:0 12px 32px rgba(20,24,31,0.18);
+    padding:6px;
+    z-index:2600;
+    min-width:210px;
+  }
+  .secret-sort-title{
+    font-size:11px;
+    font-weight:700;
+    text-transform:uppercase;
+    letter-spacing:.05em;
+    color:var(--text-faint);
+    padding:8px 12px 6px;
+  }
+  .secret-sort-item{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    width:100%;
+    background:none;border:none;
+    font:inherit;font-size:14px;font-weight:500;
+    color:var(--text);
+    padding:10px 12px;
+    border-radius:9px;
+    cursor:pointer;
+    text-align:left;
+  }
+  .secret-sort-item:hover{background:var(--accent-soft);color:var(--accent);}
+  .secret-sort-item.active{color:var(--accent);font-weight:700;}
+  .secret-sort-item .arrow{font-size:15px;line-height:1;opacity:.85;}
+  .secret-search-ico{
+    position:absolute;
+    left:14px;
+    color:var(--text-faint);
+    pointer-events:none;
+  }
+  .secret-search{
+    width:100%;
+    box-sizing:border-box;
+    padding:12px 38px 12px 40px;
+    border:1px solid var(--border);
+    border-radius:999px;
+    background:var(--card);
+    font-family:inherit;
+    font-size:15px;
+    color:var(--text);
+    box-shadow:var(--shadow);
+    outline:none;
+    transition:border-color .15s, box-shadow .15s;
+  }
+  .secret-search:focus{
+    border-color:var(--accent);
+    box-shadow:0 0 0 3px var(--accent-soft);
+  }
+  .secret-search::placeholder{color:var(--text-faint);}
+  .secret-search-clear{
+    position:absolute;
+    right:8px;
+    width:26px;height:26px;
+    border:none;background:transparent;
+    color:var(--text-faint);
+    font-size:20px;line-height:1;
+    cursor:pointer;
+    border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .secret-search-clear:hover{background:var(--accent-soft);color:var(--accent);}
+  .secret-empty-search{
+    text-align:center;
+    color:var(--text-faint);
+    font-size:14px;
+    padding:24px 8px;
+  }
   .secret-items{
     display:flex;
     flex-direction:column;
@@ -754,6 +952,46 @@
     transition:background .12s,color .12s;
   }
   .secret-del:hover{background:var(--bad-soft);color:var(--bad);}
+
+  /* ---- Modo selección (tipo galería) ---- */
+  .secret-card.secret-selecting{ cursor:pointer; -webkit-user-select:none; user-select:none; }
+  .secret-card.secret-selecting input,
+  .secret-card.secret-selecting .secret-date-cal{ pointer-events:none; }
+  .secret-card.secret-selecting .secret-del{ display:none; }
+  .secret-card.secret-selecting .secret-title-input{ padding-left:36px; }
+  .secret-check{
+    position:absolute;
+    top:15px; left:14px;
+    width:24px; height:24px;
+    border:2px solid var(--border);
+    border-radius:7px;
+    background:#fff;
+    display:flex; align-items:center; justify-content:center;
+    color:transparent;
+    z-index:3;
+  }
+  .secret-card.secret-selected{ border-color:var(--accent); box-shadow:0 0 0 2px var(--accent-soft); }
+  .secret-card.secret-selected .secret-check{ background:var(--accent); border-color:var(--accent); color:#fff; }
+  .secret-overlay.selecting{ padding-bottom:160px; }
+  .secret-select-bar{
+    position:fixed; left:0; right:0; bottom:0;
+    z-index:2700;
+    background:#fff;
+    border-top:1px solid var(--border);
+    box-shadow:0 -6px 24px rgba(20,24,31,0.12);
+    padding:12px 16px calc(12px + env(safe-area-inset-bottom, 0px));
+    display:flex; align-items:center; gap:12px;
+  }
+  .secret-select-bar .ssb-info{ flex:1; display:flex; flex-direction:column; line-height:1.25; min-width:0; }
+  .secret-select-bar .ssb-count{ font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.04em; color:var(--text-faint); }
+  .secret-select-bar .ssb-net{ font-size:17px; font-weight:800; }
+  .secret-select-bar .ssb-net.pos{color:var(--good);}
+  .secret-select-bar .ssb-net.neg{color:var(--bad);}
+  .secret-select-bar .ssb-net.neutral{color:var(--text);}
+  .secret-select-bar .ssb-btn{ border:none; border-radius:11px; font:inherit; font-weight:700; font-size:14px; padding:11px 15px; cursor:pointer; flex-shrink:0; }
+  .secret-select-bar .ssb-cancel{ background:var(--accent-soft); color:var(--text); }
+  .secret-select-bar .ssb-del{ background:var(--bad); color:#fff; }
+  .secret-select-bar .ssb-del:disabled{ opacity:0.45; cursor:default; }
 
   .secret-rows{
     border-top:1px solid var(--border);
@@ -1180,37 +1418,38 @@
   .cloud-pill.off .dot{ background:#c2c8d2; }
   @keyframes cloudpulse{ 0%,100%{opacity:1;} 50%{opacity:.35;} }
   .cloud-pill[hidden]{display:none;}
+  /* Etiqueta de categoría clicable en cada gasto */
+  .cat-row .cat-tag:hover{ background:var(--accent-soft); color:var(--accent); }
+  /* Modal centrado para nueva categoría */
+  .mini-modal{
+    position:fixed; inset:0; z-index:3000;
+    background:rgba(18,22,30,0.45);
+    -webkit-backdrop-filter:blur(4px); backdrop-filter:blur(4px);
+    display:flex; align-items:center; justify-content:center; padding:22px;
+  }
+  .mini-modal-card{
+    width:100%; max-width:320px; background:var(--card);
+    border-radius:16px; padding:20px;
+    box-shadow:0 18px 50px rgba(0,0,0,0.28);
+    font-family:'Inter',system-ui,sans-serif;
+  }
+  .mini-modal-title{ font-size:16px; font-weight:700; margin:0 0 14px; color:var(--text); }
+  .mini-modal-input{
+    width:100%; box-sizing:border-box; padding:11px 12px;
+    border:1.6px solid var(--border); border-radius:10px;
+    font-size:16px; font-family:inherit; color:var(--text); background:#fff; outline:none;
+  }
+  .mini-modal-input:focus{ border-color:var(--accent); }
+  .mini-modal-actions{ display:flex; gap:10px; margin-top:16px; justify-content:flex-end; }
+  .mini-modal-btn{
+    padding:10px 16px; border-radius:10px; border:none;
+    font:inherit; font-weight:600; font-size:14px; cursor:pointer;
+  }
+  .mini-modal-btn.ghost{ background:var(--accent-soft); color:var(--text); }
+  .mini-modal-btn.primary{ background:var(--accent); color:#fff; }
 </style>
 </head>
 <body>
-<input type="file" id="excelFileInput" accept=".xlsx,.xls,.csv" class="import-drop">
-<div class="app">
-  <header class="topbar">
-    <h1>Gastos</h1>
-    <div class="topbar-right">
-      <span class="cloud-pill off" id="cloudPill" hidden><span class="dot"></span><span id="cloudPillText">Local</span></span>
-      <button id="calcToggle" class="icon-btn" aria-label="Abrir calculadora" type="button">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><rect x="4" y="2.5" width="16" height="19" rx="2.5" stroke="currentColor" stroke-width="1.8"/><rect x="7" y="5.5" width="10" height="4" rx="1" stroke="currentColor" stroke-width="1.8"/><circle cx="7.8" cy="13.5" r="1.15" fill="currentColor"/><circle cx="12" cy="13.5" r="1.15" fill="currentColor"/><circle cx="16.2" cy="13.5" r="1.15" fill="currentColor"/><circle cx="7.8" cy="17.3" r="1.15" fill="currentColor"/><circle cx="12" cy="17.3" r="1.15" fill="currentColor"/><circle cx="16.2" cy="17.3" r="1.15" fill="currentColor"/></svg>
-      </button>
-      <div class="month-year-select">
-        <button id="monthSelectBtn" class="my-select" type="button">
-          <span id="monthSelectLabel">—</span>
-          <span class="chev"><svg width="11" height="11" viewBox="0 0 16 16" fill="none"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
-        </button>
-        <button id="yearSelectBtn" class="my-select" type="button">
-          <span id="yearSelectLabel">—</span>
-          <span class="chev"><svg width="11" height="11" viewBox="0 0 16 16" fill="none"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
-        </button>
-      </div>
-    </div>
-  </header>
-
-  <div class="months" id="monthsContainer"></div>
-
-  <footer>
-    <button class="reset-link" id="resetBtn">Borrar todos los datos</button>
-  </footer>
-</div>
 
 <div class="cloud-login" id="cloudLogin" hidden>
   <div class="cloud-login-card">
@@ -1226,9 +1465,8 @@
   </div>
 </div>
 
-<div class="secret-overlay" id="secretOverlay" hidden>
+<div class="secret-overlay" id="secretOverlay">
   <header class="topbar secret-topbar">
-    <button id="secretBack" class="icon-btn" aria-label="Volver" type="button">‹</button>
     <h1>Transacciones</h1>
     <span class="secret-spacer"></span>
   </header>
@@ -1248,6 +1486,16 @@
       <div class="label">Beneficio neto</div>
       <div class="value" id="secretNetBenefit">0,00 €</div>
     </div>
+  </div>
+  <div class="secret-toolbar">
+    <div class="secret-search-wrap">
+      <svg class="secret-search-ico" width="16" height="16" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2"/><path d="M21 21l-4.3-4.3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      <input type="text" id="secretSearch" class="secret-search" placeholder="Buscar producto…" autocomplete="off" autocapitalize="none" spellcheck="false">
+      <button type="button" id="secretSearchClear" class="secret-search-clear" aria-label="Limpiar" hidden>&times;</button>
+    </div>
+    <button type="button" id="secretSortBtn" class="secret-sort-btn" aria-label="Ordenar">
+      <svg width="19" height="19" viewBox="0 0 24 24" fill="none"><path d="M7 5v14M7 5l-3 3M7 5l3 3M17 19V5M17 19l-3-3M17 19l3-3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </button>
   </div>
   <div class="secret-items" id="secretItemsContainer"></div>
   <button id="secretAddBtn" class="add-row-btn secret-add-btn" type="button"><span>+</span> Añadir producto</button>
@@ -1275,7 +1523,7 @@
   var CLOUD = { enabled:false, db:null, auth:null, user:null, ready:false, pushTimers:{}, applying:false, unsub:{} };
 
   var MONTH_NAMES = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
-  var DEFAULT_CATEGORIES = ["Vivienda","Alimentación","Transporte","Ocio","Salud","Compras","Suscripciones","Ahorro","Otros"];
+  var DEFAULT_CATEGORIES = ["Compras","Suscripciones","Transporte"];
   var STORAGE_KEY = "gastos-app-v1";
 
   var todayReal = new Date();
@@ -1350,6 +1598,28 @@
     state = seedState();
   }
   normalizeState();
+
+  /* --- Migración única: dejar las categorías en las 3 deseadas y
+     reconvertir los gastos ya importados (categorías de ING) a ellas. --- */
+  (function catsResetV1(){
+    try{
+      if(localStorage.getItem("cats-reset-v1") === "done") return;
+      state.customCategories = [];
+      state.hiddenDefaults = [];
+      Object.keys(state.data || {}).forEach(function(y){
+        Object.keys(state.data[y] || {}).forEach(function(m){
+          var md = state.data[y][m];
+          (md.categories || []).forEach(function(g){
+            if(DEFAULT_CATEGORIES.indexOf(g.cat) === -1){
+              g.cat = mapCategoriaRaw(g.cat, g.desc);
+            }
+          });
+        });
+      });
+      localStorage.setItem("cats-reset-v1", "done");
+      save();
+    }catch(e){}
+  })();
 
   function getCategories(){
     var list = DEFAULT_CATEGORIES.filter(function(c){
@@ -1499,7 +1769,7 @@
     return full;
   }
 
-  document.getElementById("monthSelectBtn").addEventListener("click", function(ev){
+  (document.getElementById("monthSelectBtn")||{addEventListener:function(){}}).addEventListener("click", function(ev){
     ev.stopPropagation();
     var options = MONTH_NAMES.map(function(name, idx){ return {label:name, value:idx}; });
     openMySelectMenu(this, options, state.selectedMonth, function(v){
@@ -1510,7 +1780,7 @@
       renderSelectedMonth();
     });
   });
-  document.getElementById("yearSelectBtn").addEventListener("click", function(ev){
+  (document.getElementById("yearSelectBtn")||{addEventListener:function(){}}).addEventListener("click", function(ev){
     ev.stopPropagation();
     var options = getAvailableYears().map(function(y){ return {label:String(y), value:y}; });
     openMySelectMenu(this, options, state.year, function(v){
@@ -1522,9 +1792,135 @@
     });
   });
 
+  function addCustomCategory(v){
+    v = (v || "").trim();
+    if(!v) return;
+    if(getCategories().indexOf(v) === -1){
+      state.customCategories.push(v);
+      save();
+    }
+  }
+
+  // Modal centrado para escribir el nombre de una nueva categoría
+  // (centrado para que el teclado del móvil no lo tape ni lo cierre).
+  function promptNewCategory(cb){
+    var overlay = el("div","mini-modal");
+    var card = el("div","mini-modal-card");
+    var title = el("div","mini-modal-title",{text:"Nueva categoría"});
+    var input = el("input","mini-modal-input");
+    input.type = "text";
+    input.placeholder = "Nombre de la categoría";
+    input.setAttribute("autocapitalize","sentences");
+    input.setAttribute("autocomplete","off");
+    var actions = el("div","mini-modal-actions");
+    var cancel = el("button","mini-modal-btn ghost",{type:"button", text:"Cancelar"});
+    var ok = el("button","mini-modal-btn primary",{type:"button", text:"Guardar"});
+    actions.appendChild(cancel);
+    actions.appendChild(ok);
+    card.appendChild(title);
+    card.appendChild(input);
+    card.appendChild(actions);
+    overlay.appendChild(card);
+    document.body.appendChild(overlay);
+    function close(){ overlay.remove(); }
+    function submit(){
+      var v = input.value.trim();
+      close();
+      if(v) cb(v);
+    }
+    card.addEventListener("click", function(e){ e.stopPropagation(); });
+    overlay.addEventListener("click", function(){ close(); });
+    cancel.addEventListener("click", function(e){ e.stopPropagation(); close(); });
+    ok.addEventListener("click", function(e){ e.stopPropagation(); submit(); });
+    input.addEventListener("keydown", function(e){
+      if(e.key === "Enter"){ e.preventDefault(); submit(); }
+      if(e.key === "Escape"){ close(); }
+    });
+    setTimeout(function(){ input.focus(); }, 60);
+  }
+
+  // Menú flotante de categorías anclado a un elemento (para cambiar la
+  // categoría de un gasto ya existente tocando su etiqueta).
+  function closeFloatingCatMenu(){
+    var m = document.getElementById("floatingCatMenu");
+    if(m) m.remove();
+    document.removeEventListener("click", floatingCatOutside, true);
+    window.removeEventListener("scroll", closeFloatingCatMenu, true);
+  }
+  function floatingCatOutside(e){
+    var m = document.getElementById("floatingCatMenu");
+    if(m && !m.contains(e.target)) closeFloatingCatMenu();
+  }
+  function openCategoryMenuAt(anchor, currentVal, onPick){
+    closeFloatingCatMenu();
+    var menu = el("div","cat-dropdown-menu");
+    menu.id = "floatingCatMenu";
+    var itemsWrap = el("div","cat-dropdown-items");
+    menu.appendChild(itemsWrap);
+    menu.appendChild(el("div","cat-dropdown-divider"));
+    var addItem = el("div","cat-dropdown-item add-new",{text:"+ Añadir categoría"});
+    addItem.addEventListener("click", function(ev){
+      ev.stopPropagation();
+      closeFloatingCatMenu();
+      promptNewCategory(function(v){ addCustomCategory(v); onPick(v); });
+    });
+    menu.appendChild(addItem);
+    function renderItems(){
+      itemsWrap.innerHTML = "";
+      getCategories().forEach(function(c){
+        var item = el("div","cat-dropdown-item" + (c===currentVal?" selected":""));
+        var label = el("span","cat-item-label",{text:c});
+        item.appendChild(label);
+        var delBtn = el("button","cat-item-del",{type:"button","aria-label":"Eliminar categoría"});
+        delBtn.innerHTML = "&times;";
+        delBtn.addEventListener("click", function(ev){
+          ev.stopPropagation();
+          if(!deleteCategory(c)) return;
+          renderItems();
+        });
+        item.appendChild(delBtn);
+        label.addEventListener("click", function(ev){
+          ev.stopPropagation();
+          closeFloatingCatMenu();
+          onPick(c);
+        });
+        itemsWrap.appendChild(item);
+      });
+    }
+    renderItems();
+    document.body.appendChild(menu);
+    var rect = anchor.getBoundingClientRect();
+    var margin = 8, menuWidth = 210;
+    var left = Math.max(margin, Math.min(rect.left, window.innerWidth - menuWidth - margin));
+    menu.style.left = left + "px";
+    menu.style.width = menuWidth + "px";
+    var spaceBelow = window.innerHeight - rect.bottom - margin;
+    if(spaceBelow < 200 && rect.top - margin > spaceBelow){
+      menu.style.bottom = (window.innerHeight - rect.top + 6) + "px";
+      menu.style.maxHeight = Math.min(280, rect.top - margin) + "px";
+    } else {
+      menu.style.top = (rect.bottom + 6) + "px";
+      menu.style.maxHeight = Math.min(280, spaceBelow) + "px";
+    }
+    setTimeout(function(){
+      document.addEventListener("click", floatingCatOutside, true);
+      window.addEventListener("scroll", closeFloatingCatMenu, true);
+    }, 0);
+  }
+
   function buildCatRow(year, month, cat){
     var row = el("div","cat-row");
     var tag = el("span","cat-tag",{text:cat.cat});
+    tag.title = "Cambiar categoría";
+    tag.style.cursor = "pointer";
+    tag.addEventListener("click", function(ev){
+      ev.stopPropagation();
+      openCategoryMenuAt(tag, cat.cat, function(v){
+        cat.cat = v;
+        save();
+        renderSelectedMonth();
+      });
+    });
     var desc = el("span","cat-desc",{text:cat.desc || ""});
     desc.title = "Editar descripción";
     desc.addEventListener("click", function(ev){
@@ -1559,8 +1955,15 @@
       renderSelectedMonth();
     });
 
+    var mid = el("div","cat-mid");
+    mid.appendChild(desc);
+    var shortFecha = formatShortFecha(cat.fecha);
+    if(shortFecha){
+      mid.appendChild(el("span","cat-date",{text: shortFecha}));
+    }
+
     row.appendChild(tag);
-    row.appendChild(desc);
+    row.appendChild(mid);
     row.appendChild(amount);
     row.appendChild(del);
     return row;
@@ -1657,30 +2060,11 @@
       var addItem = el("div","cat-dropdown-item add-new",{text:"+ Añadir categoría"});
       addItem.addEventListener("click", function(ev){
         ev.stopPropagation();
-        var box = el("div","cat-dropdown-new-input");
-        var input = el("input");
-        input.type = "text";
-        input.placeholder = "Nueva categoría";
-        var okBtn = el("button",null,{text:"OK", type:"button"});
-        box.appendChild(input);
-        box.appendChild(okBtn);
-        addItem.replaceWith(box);
-        input.focus();
-        function commitNew(){
-          var v = input.value.trim();
-          if(!v) return;
-          if(state.customCategories.indexOf(v) === -1){
-            state.customCategories.push(v);
-            save();
-          }
+        closeMenu();
+        promptNewCategory(function(v){
+          addCustomCategory(v);
           selectValue(v);
-        }
-        okBtn.addEventListener("click", function(ev){ ev.stopPropagation(); commitNew(); });
-        input.addEventListener("keydown", function(e){
-          if(e.key === "Enter"){ e.preventDefault(); commitNew(); }
-          if(e.key === "Escape"){ closeMenu(); }
         });
-        input.addEventListener("click", function(ev){ ev.stopPropagation(); });
       });
       menu.appendChild(addItem);
       document.body.appendChild(menu);
@@ -1815,7 +2199,7 @@
       var amt = parseFloat(amountInput.value);
       if(isNaN(amt) || amt < 0) amt = 0;
       var md = getMonthData(year, month);
-      md.categories.push({id: uid(), cat: catName, desc: descInput.value.trim(), amount: amt});
+      md.categories.push({id: uid(), cat: catName, desc: descInput.value.trim(), amount: amt, fecha: formatFecha(new Date())});
       save();
       addFormOpenFor = null;
       renderSelectedMonth();
@@ -1833,13 +2217,78 @@
     return wrap;
   }
 
+  function closeApplyAllMenu(){
+    var m = document.getElementById("applyAllMenu");
+    if(m) m.remove();
+    document.removeEventListener("click", onApplyAllDocClick, false);
+    window.removeEventListener("scroll", closeApplyAllMenu, true);
+    window.removeEventListener("resize", closeApplyAllMenu);
+  }
+  function onApplyAllDocClick(e){
+    var m = document.getElementById("applyAllMenu");
+    if(m && !m.contains(e.target)) closeApplyAllMenu();
+  }
+  function showApplyAllMenu(anchor, year, md){
+    closeApplyAllMenu();
+    var menu = el("div","apply-all-menu");
+    menu.id = "applyAllMenu";
+    var btn = el("button","apply-all-item",{text:"Aplicar a todos los meses"});
+    btn.type = "button";
+    btn.addEventListener("click", function(ev){
+      ev.stopPropagation();
+      var val = md.estimated || 0;
+      for(var mo=0; mo<12; mo++){
+        getMonthData(year, mo).estimated = val;
+      }
+      save();
+      closeApplyAllMenu();
+      renderSelectedMonth();
+    });
+    menu.appendChild(btn);
+    document.body.appendChild(menu);
+    var r = anchor.getBoundingClientRect();
+    var mw = menu.offsetWidth || 210;
+    var left = Math.max(8, Math.min(r.left, window.innerWidth - mw - 8));
+    var top = r.bottom + 6;
+    if(top + menu.offsetHeight > window.innerHeight - 8){
+      top = Math.max(8, r.top - menu.offsetHeight - 6);
+    }
+    menu.style.left = left + "px";
+    menu.style.top = top + "px";
+    setTimeout(function(){
+      document.addEventListener("click", onApplyAllDocClick, false);
+      window.addEventListener("scroll", closeApplyAllMenu, true);
+      window.addEventListener("resize", closeApplyAllMenu);
+    }, 0);
+  }
+
   function buildEstimatedFigure(year, month, md){
     var figure = el("div","figure estimated");
     var label = el("div","label",{text:"Gastos estimados"});
     var value = el("div","value",{text: fmt.format(md.estimated||0)});
-    value.title = "Editar presupuesto estimado";
+    value.title = "Editar presupuesto estimado (mantén pulsado para más opciones)";
+
+    // Mantener pulsado -> menú "Aplicar a todos los meses"
+    var lpTimer = null, lpFired = false, sx = 0, sy = 0;
+    function clearLp(){ if(lpTimer){ clearTimeout(lpTimer); lpTimer = null; } }
+    value.addEventListener("pointerdown", function(ev){
+      lpFired = false; sx = ev.clientX; sy = ev.clientY;
+      clearLp();
+      lpTimer = setTimeout(function(){
+        lpFired = true;
+        if(navigator.vibrate){ try{ navigator.vibrate(15); }catch(e){} }
+        showApplyAllMenu(value, year, md);
+      }, 480);
+    });
+    value.addEventListener("pointermove", function(ev){
+      if(lpTimer && (Math.abs(ev.clientX - sx) > 10 || Math.abs(ev.clientY - sy) > 10)) clearLp();
+    });
+    value.addEventListener("pointerup", clearLp);
+    value.addEventListener("pointercancel", clearLp);
+
     value.addEventListener("click", function(ev){
       ev.stopPropagation();
+      if(lpFired){ lpFired = false; return; } // fue mantener pulsado, no editar
       var input = el("input");
       input.type = "number";
       input.min = "0";
@@ -2049,14 +2498,19 @@
     return results;
   }
 
-  function mapCategoriaRaw(raw){
-    if(!raw) return getCategories()[0] || "Otros";
-    var norm = raw.trim();
+  function mapCategoriaRaw(raw, concepto){
     var cats = getCategories();
+    var norm = (raw || "").trim().toLowerCase();
+    // coincidencia exacta con una categoría existente
     for(var i=0;i<cats.length;i++){
-      if(cats[i].toLowerCase() === norm.toLowerCase()) return cats[i];
+      if(cats[i].toLowerCase() === norm) return cats[i];
     }
-    return norm;
+    function has(c){ return cats.indexOf(c) !== -1; }
+    var s = (norm + " " + (concepto || "").toLowerCase());
+    if(has("Suscripciones") && /suscrip|netflix|spotify|hbo|disney|prime video|ps ?plus|psplus|playstation|xbox|game ?pass|youtube|icloud|apple\.com|google one|patreon|twitch|storage|dazn|crunchyroll/.test(s)) return "Suscripciones";
+    if(has("Transporte") && /transport|taxi|uber|cabify|bolt|bus|emt|metro|renfe|tren|cercan|gasolin|combustib|repsol|cepsa|bp |parking|peaje|blabla|vuelo|iberia|ryanair|vueling/.test(s)) return "Transporte";
+    if(has("Compras") && /compra|tienda|super|mercad|aliment|amazon|el corte|zara|store|shop|ropa|market|carrefour|mercadona|lidl|aliexpress|paypal/.test(s)) return "Compras";
+    return cats[0] || "Compras";
   }
 
   function sortMonthCategoriesByDate(md){
@@ -2072,7 +2526,7 @@
   function commitImport(items){
     items.forEach(function(t){
       if(getCategories().indexOf(t.categoria) === -1){
-        state.customCategories.push(t.categoria);
+        t.categoria = getCategories()[0] || "Compras";
       }
       var y = t.date.getFullYear(), m = t.date.getMonth();
       var md = getMonthData(y, m);
@@ -2167,7 +2621,7 @@
 
     var list = el("div","import-list");
     var items = freshList.slice();
-    items.forEach(function(t){ t.categoria = mapCategoriaRaw(t.categoriaRaw); });
+    items.forEach(function(t){ t.categoria = mapCategoriaRaw(t.categoriaRaw, t.concepto); });
 
     var footer = el("div","import-footer");
     var cancelBtn = el("button","btn btn-ghost",{type:"button",text:"Cancelar"});
@@ -2269,7 +2723,7 @@
     reader.readAsArrayBuffer(file);
   }
 
-  document.getElementById("excelFileInput").addEventListener("change", function(e){
+  (document.getElementById("excelFileInput")||{addEventListener:function(){}}).addEventListener("change", function(e){
     var f = e.target.files && e.target.files[0];
     if(f) handleExcelFile(f);
     e.target.value = "";
@@ -2301,6 +2755,29 @@
   }
   secretState = loadSecretState() || seedSecretState();
   if(!secretState.items) secretState.items = [];
+
+  /* --- Restauración única de las operaciones del usuario ---
+     Se ejecuta una sola vez por dispositivo. Repone las transacciones
+     reales y las marca como recientes para que se suban a la nube. */
+  (function restoreSecretV1(){
+    try{
+      if(localStorage.getItem("restore-secret-v1") === "done") return;
+      secretState = { items: [
+        { id:"r1", title:"Asics grises",        comprado:{fecha:"25-03-26", precio:7},  subido:{fecha:"03-04-26", precio:70},    vendido:{fecha:"", precio:70} },
+        { id:"r2", title:"Air max 95 x Corteiz", comprado:{fecha:"11-04-26", precio:35}, subido:{fecha:"20-04-26", precio:79},    vendido:{fecha:"21-04-26", precio:79} },
+        { id:"r3", title:"Asics rosas",          comprado:{fecha:"19-04-26", precio:30}, subido:{fecha:"01-05-26", precio:75},    vendido:{fecha:"03-05-26", precio:75} },
+        { id:"r4", title:"Nike supreme",         comprado:{fecha:"19-04-26", precio:40}, subido:{fecha:"02-05-26", precio:85},    vendido:{fecha:"13-07-26", precio:85} },
+        { id:"r5", title:"Asics rosas 2",        comprado:{fecha:"08-06-26", precio:37}, subido:{fecha:"10-07-26", precio:89.99}, vendido:{fecha:"12-07-26", precio:85} },
+        { id:"r6", title:"Pantalon Corteiz",     comprado:{fecha:"08-06-26", precio:26}, subido:{fecha:"09-07-26", precio:55},    vendido:{fecha:"", precio:""} },
+        { id:"r7", title:"Camiseta España",      comprado:{fecha:"08-06-26", precio:11}, subido:{fecha:"", precio:""},            vendido:{fecha:"", precio:""} },
+        { id:"r8", title:"Camiseta brasil",      comprado:{fecha:"08-06-26", precio:11}, subido:{fecha:"", precio:""},            vendido:{fecha:"", precio:""} }
+      ] };
+      var ts = Date.now();
+      localStorage.setItem(SECRET_STORAGE_KEY, JSON.stringify(secretState));
+      localStorage.setItem(SECRET_STORAGE_KEY + "__ts", String(ts));
+      localStorage.setItem("restore-secret-v1", "done");
+    }catch(e){}
+  })();
 
   function saveSecret(){
     var ts = Date.now();
@@ -2376,6 +2853,12 @@
   }
   function formatFecha(d){
     return pad2(d.getDate()) + "-" + pad2(d.getMonth()+1) + "-" + String(d.getFullYear()).slice(-2);
+  }
+  var MONTH_ABBR = ["ene","feb","mar","abr","may","jun","jul","ago","sep","oct","nov","dic"];
+  function formatShortFecha(fechaStr){
+    var d = parseFechaStr(fechaStr);
+    if(!d) return "";
+    return d.getDate() + " " + MONTH_ABBR[d.getMonth()];
   }
   function sameDay(a,b){
     return a.getFullYear()===b.getFullYear() && a.getMonth()===b.getMonth() && a.getDate()===b.getDate();
@@ -2535,9 +3018,28 @@
     netEl.className = "value" + (t.neto > 0 ? " pos" : (t.neto < 0 ? " neg" : ""));
   }
 
+  var secretSelectMode = false;
+  var secretSelected = {};
+  var secretSuppressClick = false;
+
   function buildSecretCard(item){
     var card = el("div","secret-card");
     card.setAttribute("data-item-id", item.id);
+
+    if(secretSelectMode){
+      card.classList.add("secret-selecting");
+      if(secretSelected[item.id]) card.classList.add("secret-selected");
+      var check = el("div","secret-check");
+      check.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M5 12l5 5L20 7" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+      card.appendChild(check);
+      card.addEventListener("click", function(ev){
+        ev.stopPropagation();
+        if(secretSuppressClick) return;
+        if(secretSelected[item.id]){ delete secretSelected[item.id]; card.classList.remove("secret-selected"); }
+        else { secretSelected[item.id] = true; card.classList.add("secret-selected"); }
+        updateSelectBar();
+      });
+    }
 
     var del = el("button","secret-del",{type:"button","aria-label":"Eliminar producto"});
     del.innerHTML = "&times;";
@@ -2590,13 +3092,24 @@
     return card;
   }
 
+  var secretSearchQuery = "";
   function renderSecretItems(){
     var container = document.getElementById("secretItemsContainer");
     container.innerHTML = "";
-    secretState.items.forEach(function(item){
-      container.appendChild(buildSecretCard(item));
+    var q = secretSearchQuery.trim().toLowerCase();
+    var list = secretState.items.filter(function(item){
+      if(!q) return true;
+      return (item.title || "").toLowerCase().indexOf(q) !== -1;
     });
+    if(list.length === 0 && q){
+      container.appendChild(el("div","secret-empty-search",{text:"Sin resultados para “" + secretSearchQuery.trim() + "”"}));
+    } else {
+      list.forEach(function(item){
+        container.appendChild(buildSecretCard(item));
+      });
+    }
     renderSecretSummary();
+    if(secretSelectMode) updateSelectBar();
   }
 
   function openSecretTab(){
@@ -2605,12 +3118,15 @@
     document.body.style.overflow = "hidden";
   }
   function closeSecretTab(){
+    if(secretSelectMode) exitSelectMode();
     document.getElementById("secretOverlay").hidden = true;
     document.body.style.overflow = "";
   }
 
-  document.getElementById("secretBack").addEventListener("click", closeSecretTab);
   document.getElementById("secretAddBtn").addEventListener("click", function(){
+    // Al añadir, limpiar la búsqueda para que se vea el producto nuevo
+    var sInput = document.getElementById("secretSearch");
+    if(sInput && secretSearchQuery){ sInput.value = ""; secretSearchQuery = ""; updateSecretClearBtn(); }
     secretState.items.push({
       id: uid(),
       title: "",
@@ -2622,311 +3138,197 @@
     renderSecretItems();
   });
 
-  // ---- Arrastrar (mantener pulsado) para reordenar los bloques de producto ----
-  function setupSecretDragReorder(){
-    var container = document.getElementById("secretItemsContainer");
-    var LONG_PRESS_MS = 380;
-    var MOVE_CANCEL_PX = 10;
+  // ---- Barra de búsqueda de productos ----
+  function updateSecretClearBtn(){
+    var clr = document.getElementById("secretSearchClear");
+    if(clr) clr.hidden = !secretSearchQuery;
+  }
+  (function setupSecretSearch(){
+    var input = document.getElementById("secretSearch");
+    var clr = document.getElementById("secretSearchClear");
+    if(!input) return;
+    input.addEventListener("input", function(){
+      secretSearchQuery = input.value;
+      updateSecretClearBtn();
+      renderSecretItems();
+    });
+    if(clr) clr.addEventListener("click", function(){
+      input.value = "";
+      secretSearchQuery = "";
+      updateSecretClearBtn();
+      renderSecretItems();
+      input.focus();
+    });
+  })();
 
+  // ---- Ordenar productos ----
+  var secretSortMode = "";
+  function sortSecretItems(mode){
+    function saleDate(it){ var d = parseFechaStr(it.vendido.fecha); return d ? d.getTime() : null; }
+    function benefit(it){
+      var v = parseFloat(it.vendido.precio);
+      if(isNaN(v)) return null;
+      var c = parseFloat(it.comprado.precio);
+      return v - (isNaN(c) ? 0 : c);
+    }
+    function cmp(a,b,dir){
+      if(a === null && b === null) return 0;
+      if(a === null) return 1;   // los que no tienen (sin venta) van al final
+      if(b === null) return -1;
+      return dir === "asc" ? a - b : b - a;
+    }
+    var arr = secretState.items.slice();
+    if(mode === "fecha-asc") arr.sort(function(a,b){ return cmp(saleDate(a),saleDate(b),"asc"); });
+    else if(mode === "fecha-desc") arr.sort(function(a,b){ return cmp(saleDate(a),saleDate(b),"desc"); });
+    else if(mode === "ben-asc") arr.sort(function(a,b){ return cmp(benefit(a),benefit(b),"asc"); });
+    else if(mode === "ben-desc") arr.sort(function(a,b){ return cmp(benefit(a),benefit(b),"desc"); });
+    else return;
+    secretState.items = arr;
+    secretSortMode = mode;
+    saveSecret();
+    renderSecretItems();
+  }
+  function closeSortMenu(){
+    var m = document.getElementById("secretSortMenu");
+    if(m) m.remove();
+    document.removeEventListener("click", sortMenuOutside, true);
+    var btn = document.getElementById("secretSortBtn");
+    if(btn) btn.classList.remove("active");
+  }
+  function sortMenuOutside(e){
+    var m = document.getElementById("secretSortMenu");
+    var btn = document.getElementById("secretSortBtn");
+    if(m && !m.contains(e.target) && e.target !== btn && !(btn && btn.contains(e.target))) closeSortMenu();
+  }
+  (function setupSecretSort(){
+    var btn = document.getElementById("secretSortBtn");
+    if(!btn) return;
+    var OPTS = [
+      {mode:"fecha-asc",  label:"Fecha",     arrow:"↑"},
+      {mode:"fecha-desc", label:"Fecha",     arrow:"↓"},
+      {mode:"ben-asc",    label:"Beneficio", arrow:"↑"},
+      {mode:"ben-desc",   label:"Beneficio", arrow:"↓"}
+    ];
+    btn.addEventListener("click", function(ev){
+      ev.stopPropagation();
+      if(document.getElementById("secretSortMenu")){ closeSortMenu(); return; }
+      var menu = el("div","secret-sort-menu"); menu.id = "secretSortMenu";
+      menu.appendChild(el("div","secret-sort-title",{text:"Ordenar por:"}));
+      OPTS.forEach(function(o){
+        var item = el("button","secret-sort-item" + (secretSortMode===o.mode?" active":""),{type:"button"});
+        item.appendChild(el("span",null,{text:o.label}));
+        item.appendChild(el("span","arrow",{text:o.arrow}));
+        item.addEventListener("click", function(e){ e.stopPropagation(); sortSecretItems(o.mode); closeSortMenu(); });
+        menu.appendChild(item);
+      });
+      document.body.appendChild(menu);
+      btn.classList.add("active");
+      var r = btn.getBoundingClientRect();
+      var mw = menu.offsetWidth || 210;
+      var left = Math.max(8, Math.min(r.right - mw, window.innerWidth - mw - 8));
+      menu.style.left = left + "px";
+      var top = r.bottom + 6;
+      if(top + menu.offsetHeight > window.innerHeight - 8) top = Math.max(8, r.top - menu.offsetHeight - 6);
+      menu.style.top = top + "px";
+      setTimeout(function(){ document.addEventListener("click", sortMenuOutside, true); }, 0);
+    });
+  })();
+
+  // ---- Modo selección (mantener pulsado, tipo galería) ----
+  function selectedTotals(){
+    var ing = 0, gas = 0, n = 0;
+    secretState.items.forEach(function(it){
+      if(!secretSelected[it.id]) return;
+      n++;
+      var v = parseFloat(it.vendido.precio); if(!isNaN(v)) ing += v;
+      var c = parseFloat(it.comprado.precio); if(!isNaN(c)) gas += c;
+    });
+    return { n:n, ing:ing, gas:gas, neto: ing - gas };
+  }
+  function showSelectBar(){
+    if(document.getElementById("secretSelectBar")) return;
+    var bar = el("div","secret-select-bar"); bar.id = "secretSelectBar";
+    var cancel = el("button","ssb-btn ssb-cancel",{type:"button",text:"Cancelar"});
+    cancel.addEventListener("click", function(){ exitSelectMode(); });
+    var info = el("div","ssb-info");
+    info.appendChild(el("span","ssb-count"));
+    info.appendChild(el("span","ssb-net"));
+    var del = el("button","ssb-btn ssb-del",{type:"button",text:"Eliminar"});
+    del.addEventListener("click", function(){ deleteSelected(); });
+    bar.appendChild(cancel);
+    bar.appendChild(info);
+    bar.appendChild(del);
+    document.body.appendChild(bar);
+    updateSelectBar();
+  }
+  function updateSelectBar(){
+    var bar = document.getElementById("secretSelectBar"); if(!bar) return;
+    var t = selectedTotals();
+    bar.querySelector(".ssb-count").textContent = t.n + (t.n === 1 ? " seleccionado" : " seleccionados");
+    var net = bar.querySelector(".ssb-net");
+    net.textContent = "Beneficio neto " + (t.neto >= 0 ? "+" : "") + fmtDec.format(t.neto);
+    net.className = "ssb-net " + (t.neto > 0 ? "pos" : (t.neto < 0 ? "neg" : "neutral"));
+    var del = bar.querySelector(".ssb-del"); if(del) del.disabled = (t.n === 0);
+  }
+  function enterSelectMode(id){
+    secretSelectMode = true;
+    secretSelected = {};
+    if(id) secretSelected[id] = true;
+    secretSuppressClick = true;
+    setTimeout(function(){ secretSuppressClick = false; }, 350);
+    var ov = document.getElementById("secretOverlay");
+    if(ov) ov.classList.add("selecting");
+    renderSecretItems();
+    showSelectBar();
+  }
+  function exitSelectMode(){
+    secretSelectMode = false;
+    secretSelected = {};
+    var bar = document.getElementById("secretSelectBar"); if(bar) bar.remove();
+    var ov = document.getElementById("secretOverlay");
+    if(ov) ov.classList.remove("selecting");
+    renderSecretItems();
+  }
+  function deleteSelected(){
+    var t = selectedTotals();
+    if(t.n === 0){ exitSelectMode(); return; }
+    if(!confirm("¿Eliminar " + t.n + " producto" + (t.n === 1 ? "" : "s") + " seleccionado" + (t.n === 1 ? "" : "s") + "?")) return;
+    secretState.items = secretState.items.filter(function(it){ return !secretSelected[it.id]; });
+    saveSecret();
+    exitSelectMode();
+  }
+
+  // Mantener pulsado una tarjeta para entrar en modo selección
+  (function setupSecretLongPress(){
+    var container = document.getElementById("secretItemsContainer");
+    var LONG_PRESS_MS = 420, MOVE_CANCEL_PX = 12;
     container.addEventListener("pointerdown", function(ev){
       if(ev.pointerType === "mouse" && ev.button !== 0) return;
+      if(secretSelectMode) return;
       var target = ev.target;
       if(target.closest("input,button,select,textarea")) return;
       var card = target.closest(".secret-card");
       if(!card || !container.contains(card)) return;
-
-      var pointerId = ev.pointerId;
-      var startX = ev.clientX, startY = ev.clientY;
-      var pressTimer = null;
-      var dragging = false;
-      var startTop = 0, cardHeight = 0;
-      var otherCards = [];
-      var currentTarget = null, currentBefore = true;
-
-      function removeDocListeners(){
-        document.removeEventListener("pointermove", onMove);
-        document.removeEventListener("pointerup", onUp);
-        document.removeEventListener("pointercancel", onUp);
+      var id = card.getAttribute("data-item-id");
+      var sx = ev.clientX, sy = ev.clientY, timer = null;
+      function cleanup(){
+        clearTimeout(timer);
+        document.removeEventListener("pointermove", mv);
+        document.removeEventListener("pointerup", up);
+        document.removeEventListener("pointercancel", up);
       }
-
-      function onMove(e){
-        if(e.pointerId !== pointerId) return;
-        if(!dragging){
-          var dx = e.clientX - startX, dy = e.clientY - startY;
-          if(Math.sqrt(dx*dx + dy*dy) > MOVE_CANCEL_PX){
-            clearTimeout(pressTimer);
-            removeDocListeners();
-          }
-          return;
-        }
-        e.preventDefault();
-        var dy = e.clientY - startY;
-        card.style.transform = "translateY(" + dy + "px)";
-        var centerY = startTop + cardHeight/2 + dy;
-        otherCards.forEach(function(o){ o.el.classList.remove("drop-before","drop-after"); });
-        var found = null, before = true;
-        for(var i=0;i<otherCards.length;i++){
-          if(centerY < otherCards[i].mid){ found = otherCards[i]; before = true; break; }
-        }
-        if(!found && otherCards.length){ found = otherCards[otherCards.length-1]; before = false; }
-        if(found) found.el.classList.add(before ? "drop-before" : "drop-after");
-        currentTarget = found; currentBefore = before;
-      }
-
-      function activateDrag(){
-        dragging = true;
-        var rect = card.getBoundingClientRect();
-        startTop = rect.top;
-        cardHeight = rect.height;
-        card.classList.add("dragging");
-        card.style.zIndex = "50";
-        otherCards = Array.prototype.slice.call(container.querySelectorAll(".secret-card")).filter(function(c){ return c !== card; }).map(function(c){
-          var r = c.getBoundingClientRect();
-          return { el: c, id: c.getAttribute("data-item-id"), mid: r.top + r.height/2 };
-        });
-        try{ card.setPointerCapture(pointerId); }catch(err){}
-        if(navigator.vibrate){ try{ navigator.vibrate(12); }catch(err){} }
-      }
-
-      function onUp(e){
-        if(e.pointerId !== pointerId) return;
-        clearTimeout(pressTimer);
-        removeDocListeners();
-        if(!dragging) return;
-        card.classList.remove("dragging");
-        card.style.transform = "";
-        card.style.zIndex = "";
-        otherCards.forEach(function(o){ o.el.classList.remove("drop-before","drop-after"); });
-
-        var itemId = card.getAttribute("data-item-id");
-        var items = secretState.items;
-        var fromIdx = -1;
-        for(var i=0;i<items.length;i++){ if(items[i].id === itemId){ fromIdx = i; break; } }
-        if(fromIdx === -1) return;
-        var moved = items[fromIdx];
-        items.splice(fromIdx, 1);
-        var toIdx;
-        if(currentTarget){
-          var targetIdx = -1;
-          for(var j=0;j<items.length;j++){ if(items[j].id === currentTarget.id){ targetIdx = j; break; } }
-          toIdx = currentBefore ? targetIdx : targetIdx + 1;
-          if(toIdx < 0) toIdx = items.length;
-        } else {
-          toIdx = items.length;
-        }
-        items.splice(toIdx, 0, moved);
-        saveSecret();
-        renderSecretItems();
-      }
-
-      pressTimer = setTimeout(activateDrag, LONG_PRESS_MS);
-      document.addEventListener("pointermove", onMove);
-      document.addEventListener("pointerup", onUp);
-      document.addEventListener("pointercancel", onUp);
-    });
-  }
-  setupSecretDragReorder();
-
-  // ---- Calculadora ----
-  (function(){
-    var calcToggleBtn = document.getElementById("calcToggle");
-    var panel = null;
-    var calc = { display: "0", expr: "", firstOperand: null, operator: null, waitingForSecond: false };
-
-    var OPS = {
-      "+": function(a,b){ return a+b; },
-      "-": function(a,b){ return a-b; },
-      "×": function(a,b){ return a*b; },
-      "÷": function(a,b){ return b === 0 ? 0 : a/b; }
-    };
-
-    function formatNum(n){
-      if(!isFinite(n)) return "Error";
-      var r = Math.round(n * 1e9) / 1e9;
-      return String(r);
-    }
-
-    function updateDisplay(){
-      if(!panel) return;
-      panel.querySelector(".calc-value").textContent = calc.display;
-      panel.querySelector(".calc-expr").textContent = calc.expr;
-    }
-
-    function inputDigit(d){
-      if(calc.waitingForSecond){
-        calc.display = d === "." ? "0." : d;
-        calc.waitingForSecond = false;
-      } else if(d === "."){
-        if(calc.display.indexOf(".") === -1) calc.display += ".";
-      } else {
-        calc.display = (calc.display === "0") ? d : calc.display + d;
-      }
-      updateDisplay();
-    }
-
-    function inputOperator(op){
-      var inputValue = parseFloat(calc.display);
-      if(calc.operator && calc.waitingForSecond){
-        calc.operator = op;
-        calc.expr = formatNum(calc.firstOperand) + " " + op;
-        updateDisplay();
-        return;
-      }
-      if(calc.firstOperand === null){
-        calc.firstOperand = inputValue;
-      } else if(calc.operator){
-        var result = OPS[calc.operator](calc.firstOperand, inputValue);
-        calc.display = formatNum(result);
-        calc.firstOperand = result;
-      }
-      calc.waitingForSecond = true;
-      calc.operator = op;
-      calc.expr = formatNum(calc.firstOperand) + " " + op;
-      updateDisplay();
-    }
-
-    function inputEquals(){
-      var inputValue = parseFloat(calc.display);
-      if(calc.operator === null || calc.waitingForSecond) return;
-      var result = OPS[calc.operator](calc.firstOperand, inputValue);
-      calc.expr = formatNum(calc.firstOperand) + " " + calc.operator + " " + formatNum(inputValue) + " =";
-      calc.display = formatNum(result);
-      calc.firstOperand = result;
-      calc.operator = null;
-      calc.waitingForSecond = true;
-      updateDisplay();
-    }
-
-    function inputPercent(){
-      var v = parseFloat(calc.display);
-      calc.display = formatNum(v/100);
-      updateDisplay();
-    }
-
-    function backspace(){
-      if(calc.waitingForSecond) return;
-      calc.display = calc.display.length > 1 ? calc.display.slice(0,-1) : "0";
-      if(calc.display === "-") calc.display = "0";
-      updateDisplay();
-    }
-
-    function clearAll(){
-      calc = { display:"0", expr:"", firstOperand:null, operator:null, waitingForSecond:false };
-      updateDisplay();
-    }
-
-    function handleKey(key){
-      if(/^[0-9]$/.test(key)){ inputDigit(key); return; }
-      if(key === "."){ inputDigit("."); return; }
-      if(key === "AC"){ clearAll(); return; }
-      if(key === "back"){ backspace(); return; }
-      if(key === "%"){ inputPercent(); return; }
-      if(key === "="){
-        if(calc.display === "5292" && calc.operator === null){
-          clearAll();
-          closePanel();
-          openSecretTab();
-          return;
-        }
-        inputEquals();
-        return;
-      }
-      if(OPS[key]){ inputOperator(key); return; }
-    }
-
-    var KEYS = [
-      {label:"AC", cls:"op", key:"AC"},
-      {label:"⌫", cls:"op", key:"back"},
-      {label:"%", cls:"op", key:"%"},
-      {label:"÷", cls:"op", key:"÷"},
-      {label:"7", cls:"num", key:"7"},
-      {label:"8", cls:"num", key:"8"},
-      {label:"9", cls:"num", key:"9"},
-      {label:"×", cls:"op", key:"×"},
-      {label:"4", cls:"num", key:"4"},
-      {label:"5", cls:"num", key:"5"},
-      {label:"6", cls:"num", key:"6"},
-      {label:"−", cls:"op", key:"-"},
-      {label:"1", cls:"num", key:"1"},
-      {label:"2", cls:"num", key:"2"},
-      {label:"3", cls:"num", key:"3"},
-      {label:"+", cls:"op", key:"+"},
-      {label:"0", cls:"num zero", key:"0"},
-      {label:",", cls:"num", key:"."},
-      {label:"=", cls:"equals", key:"="}
-    ];
-
-    function buildPanel(){
-      var p = el("div","calc-panel");
-      var display = el("div","calc-display");
-      display.appendChild(el("div","calc-expr"));
-      display.appendChild(el("div","calc-value",{text:"0"}));
-      p.appendChild(display);
-      var grid = el("div","calc-grid");
-      KEYS.forEach(function(k){
-        var btn = el("button","calc-key " + k.cls,{type:"button", text:k.label});
-        btn.addEventListener("click", function(ev){
-          ev.stopPropagation();
-          handleKey(k.key);
-        });
-        grid.appendChild(btn);
-      });
-      p.appendChild(grid);
-      p.addEventListener("click", function(ev){ ev.stopPropagation(); });
-      return p;
-    }
-
-    function positionPanel(){
-      var rect = calcToggleBtn.getBoundingClientRect();
-      var margin = 8;
-      var panelWidth = Math.min(280, window.innerWidth - margin*2);
-      var right = window.innerWidth - rect.right;
-      right = Math.max(margin, Math.min(right, window.innerWidth - panelWidth - margin));
-      panel.style.right = right + "px";
-      panel.style.left = "auto";
-      panel.style.top = (rect.bottom + 8) + "px";
-    }
-
-    function closePanel(){
-      if(panel){ panel.remove(); panel = null; }
-      calcToggleBtn.classList.remove("active");
-      document.removeEventListener("click", outsideClick, true);
-      window.removeEventListener("resize", closePanel);
-      window.removeEventListener("scroll", closePanel, true);
-    }
-    function outsideClick(ev){
-      if(panel && !panel.contains(ev.target) && !calcToggleBtn.contains(ev.target)){
-        closePanel();
-      }
-    }
-    function openPanel(){
-      clearAll();
-      panel = buildPanel();
-      document.body.appendChild(panel);
-      positionPanel();
-      calcToggleBtn.classList.add("active");
-      setTimeout(function(){
-        document.addEventListener("click", outsideClick, true);
-        window.addEventListener("resize", closePanel);
-        window.addEventListener("scroll", closePanel, true);
-      }, 0);
-    }
-
-    calcToggleBtn.addEventListener("click", function(ev){
-      ev.stopPropagation();
-      if(panel) closePanel(); else openPanel();
+      function mv(e){ if(Math.abs(e.clientX - sx) > MOVE_CANCEL_PX || Math.abs(e.clientY - sy) > MOVE_CANCEL_PX) cleanup(); }
+      function up(){ cleanup(); }
+      timer = setTimeout(function(){
+        if(navigator.vibrate){ try{ navigator.vibrate(15); }catch(e){} }
+        enterSelectMode(id);
+        cleanup();
+      }, LONG_PRESS_MS);
+      document.addEventListener("pointermove", mv);
+      document.addEventListener("pointerup", up);
+      document.addEventListener("pointercancel", up);
     });
   })();
-
-  document.getElementById("resetBtn").addEventListener("click", function(){
-    if(confirm("¿Seguro que quieres borrar todos los datos guardados? Esta acción no se puede deshacer.")){
-      state = seedState();
-      normalizeState();
-      save();
-      renderMonthYearLabels();
-      renderSelectedMonth();
-    }
-  });
 
 
   /* ============================================================
@@ -2952,7 +3354,7 @@
     else { pill.classList.add("off"); txt.textContent = "Sin conexión"; }
   }
 
-  function rerenderMain(){ renderMonthYearLabels(); renderSelectedMonth(); }
+  function rerenderMain(){}
   function rerenderSecretIfOpen(){
     var ov = document.getElementById("secretOverlay");
     if(ov && ov.hidden === false){
@@ -3155,8 +3557,7 @@
     });
   }
 
-  renderMonthYearLabels();
-  renderSelectedMonth();
+  renderSecretItems();
   cloudBoot();
 })();
 </script>
